@@ -486,7 +486,7 @@ const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C"
    chevron, square, circle, cross, house. Your own crew always gets the triangle. */
 const SHAPES=["tri","dia","hex","chev","sq","cir","crs","pent"];
 
-let day="fri", filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false, pullAgain=false;
+let day="fri", filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false, pullAgain=false, lastPull=0;
 
 /* A person is a random id this browser keeps. No accounts, no sign in. */
 const PID=(function(){
@@ -864,7 +864,7 @@ function cacheLoad(){
 async function pull(){
   if(!configured())return;
   if(pulling){ pullAgain=true; return; }   // coalesce instead of dropping
-  pulling=true;
+  pulling=true; lastPull=Date.now();
   const boards=crewsOnScreen();
   try{
     const results=await Promise.all(boards.map(async b=>{
@@ -1123,7 +1123,18 @@ draw();
 
 {
   pull();
-  setInterval(()=>{ if(!document.hidden)pull(); },6000);
+  /* Polling costs quota, so it is fast only while you are actually using the page:
+     5s for a minute after your last tap, then 30s, and nothing at all once the
+     page has sat untouched for 10 minutes or is in the background. */
+  let lastTouch=Date.now();
+  window.addEventListener("pointerdown",()=>{lastTouch=Date.now();},{passive:true});
+  setInterval(()=>{
+    if(document.hidden)return;
+    const idle=Date.now()-lastTouch;
+    if(idle>600000)return;                 // untouched for 10 min: stop asking
+    const want=idle<60000?5000:30000;
+    if(Date.now()-lastPull>=want-250)pull();
+  },5000);
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden)pull(); });
   window.addEventListener("online",()=>{ pull(); push(); });
 }
