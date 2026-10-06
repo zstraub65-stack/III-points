@@ -103,7 +103,15 @@ body.night #grain{opacity:.28;mix-blend-mode:screen}
 .blk.rec{outline:2px dotted var(--ink);outline-offset:-1px;z-index:5}
 .star{position:absolute;top:2px;right:3px;font-size:9px;line-height:1}
 .crew{position:absolute;bottom:2px;right:3px;display:flex;gap:1px}
-.crew i{width:9px;height:9px;border-radius:50%;border:1.2px solid rgba(0,0,0,.45);display:block}
+.crew i{width:10px;height:10px;display:block}
+.mk-tri{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.mk-dia{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.mk-hex{clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
+.mk-chev{clip-path:polygon(50% 0,100% 45%,100% 100%,50% 55%,0 100%,0 45%)}
+.mk-sq{clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.mk-cir{border-radius:50%}
+.mk-crs{clip-path:polygon(35% 0,65% 0,65% 35%,100% 35%,100% 65%,65% 65%,65% 100%,35% 100%,35% 65%,0 65%,0 35%,35% 35%)}
+.mk-pent{clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)}
 .crew b{font-family:var(--ui);font-size:7.5px;font-weight:800;padding-left:1px;line-height:9px}
 .cl{position:absolute;left:1px;top:2px;bottom:2px;width:3px;background:#E3112A;border-radius:2px}
 .fade .blk:not(.on){opacity:.14;filter:grayscale(1)}
@@ -173,8 +181,13 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .ch-name{font-family:var(--disp);font-size:14px;text-transform:uppercase;letter-spacing:.01em}
 .ch-count{font-family:var(--mono);font-size:11.5px;opacity:.7;flex:1}
 .ch-btn{border:2px solid var(--ink);border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:800}
-.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);flex:0 0 12px;display:inline-block}
+.dot{width:14px;height:14px;flex:0 0 14px;display:inline-block}
 .person .dot{width:20px;height:20px;flex:0 0 20px}
+.person{cursor:pointer}
+.person .pn{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.lineup .row b{min-width:62px}
+.lineup .daylab{font-family:var(--disp);font-size:13px;text-transform:uppercase;margin:12px 0 2px;letter-spacing:.02em}
+.shared{font-weight:800}
 .live{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3FD07A;margin-right:5px;vertical-align:1px}
 .live.off{background:#F0860B}
 .goin span{padding-left:8px}
@@ -467,7 +480,11 @@ const BOARD = ((location.hash.match(/board=([A-Za-z0-9_-]{1,32})/) || [])[1] || 
 const LS="iiip26-mine", LSN="iiip26-name", LSP="iiip26-pid", LSC="iiip26-cache";
 const LSF="iiip26-follows", LSH="iiip26-hidden", LSW="iiip26-welcomed";
 let follows=[], hidden=new Set();
-const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C","#6B4F1D"];
+const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C","#6B4F1D",
+            "#1A1A1A","#C4A000","#2E7D8F","#9B1B5A"];
+/* Shapes come off the poster: the III Points triangle first, then diamond, hex,
+   chevron, square, circle, cross, house. Your own crew always gets the triangle. */
+const SHAPES=["tri","dia","hex","chev","sq","cir","crs","pent"];
 
 let day="fri", filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false, pullAgain=false;
 
@@ -483,7 +500,25 @@ const PID=(function(){
 function k(d,n){return d+"|"+n;}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1500);}
-function colorFor(pid){let h=0;for(let i=0;i<pid.length;i++)h=(h*31+pid.charCodeAt(i))>>>0;return PAL[h%PAL.length];}
+function hashOf(str){let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return h;}
+function shapeFor(board){
+  // by position, not by hash, so two crews on screen never share a shape
+  const i=crewsOnScreen().indexOf(board);
+  if(i<0)return SHAPES[1+(hashOf(board)%(SHAPES.length-1))];
+  return SHAPES[i%SHAPES.length];
+}
+/* colour is assigned by position within the crew, so two people on the same crew
+   never share one. Sorted by id so everyone's device agrees. */
+function colorFor(pid){
+  const p=people.find(x=>x.person===pid);
+  const board=p?p.board:BOARD;
+  const mates=people.filter(x=>x.board===board).map(x=>x.person).sort();
+  const i=mates.indexOf(pid);
+  return PAL[(i<0?hashOf(pid):i)%PAL.length];
+}
+function markHTML(p,cls){
+  return '<i class="mk mk-'+shapeFor(p.board)+(cls?" "+cls:"")+'" style="background:'+colorFor(p.person)+'"></i>';
+}
 function others(){return people.filter(p=>p.person!==PID);}
 function crewFor(key){return others().filter(p=>p.sets.has(key)&&!hidden.has(p.board));}
 function crewsOnScreen(){
@@ -625,7 +660,7 @@ function renderGrid(){
       h+=`<span class="tm">${sh(s)}&ndash;${sh(e)}</span>`;
       if(cw.length){
         h+=`<span class="crew">`;
-        cw.slice(0,3).forEach(p=>{h+=`<i style="background:${colorFor(p.person)}"></i>`;});
+        cw.slice(0,3).forEach(p=>{h+=markHTML(p);});
         if(cw.length>3)h+=`<b>+${cw.length-3}</b>`;
         h+=`</span>`;
       }
@@ -699,9 +734,12 @@ function renderPanels(){
     mem.slice().sort((a,c)=>c.sets.size-a.sets.size).forEach(p=>{
       const row=document.createElement("div");
       row.className="person";
+      row.dataset.pid=p.person;
+      row.setAttribute("role","button");
+      row.tabIndex=0;
       if(hidden.has(b))row.style.opacity=".4";
       const dot=document.createElement("span");
-      dot.className="dot"; dot.style.background=colorFor(p.person);
+      dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
       const n2=document.createElement("span");
       n2.className="pn";
       n2.textContent=(p.person===PID?"You":(p.name||"Someone"));
@@ -739,13 +777,51 @@ function openSheet(name){
   const box=document.getElementById("goin");
   cw.forEach(p=>{
     const sp=document.createElement("span");
+    sp.dataset.pid=p.person;
+    sp.style.cursor="pointer";
     const dot=document.createElement("span");
-    dot.className="dot"; dot.style.background=colorFor(p.person);
+    dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
     const t=document.createElement("em"); t.style.fontStyle="normal";
     t.textContent=(p.name||"Someone")+(p.board!==BOARD?" · "+p.board:"");
     sp.append(dot,t); box.appendChild(sp);
   });
 }
+function openPerson(pid){
+  const p=people.find(x=>x.person===pid);
+  if(!p)return;
+  const who=(p.person===PID?"You":(p.name||"Someone"));
+  const total=p.sets.size;
+  let h='<h3>'+esc(who)+'</h3><div class="meta">'+
+    esc(p.board)+(p.board===BOARD?" (your crew)":"")+' &middot; '+total+(total===1?" set":" sets")+'</div>';
+
+  if(!total){
+    h+='<p>Nothing picked yet.</p>';
+  }else{
+    let shared=0;
+    const body=["fri","sat"].map(d=>{
+      const rows=DATA[d].filter(r=>p.sets.has(k(d,r[1]))).sort((a,b)=>T(a[2])-T(b[2]));
+      if(!rows.length)return "";
+      let out='<div class="daylab">'+(d==="fri"?"Friday 16":"Saturday 17")+'</div>';
+      rows.forEach(r=>{
+        const both=p.person!==PID&&mine.has(k(d,r[1]));
+        if(both)shared++;
+        out+='<div class="row"><b>'+sh(T(r[2]))+'</b><span class="s'+(both?" shared":"")+'">'+
+          esc(r[1])+(r[4]?" "+esc(r[4]):"")+
+          '<small>'+esc(r[0])+(both?" &middot; you too":"")+'</small></span></div>';
+      });
+      return out;
+    }).join("");
+    h+='<div class="lineup">'+body+'</div>';
+    if(p.person!==PID){
+      h+='<p>'+(shared?("You are both down for "+shared+(shared===1?" set.":" sets.")):"Nothing in common so far.")+'</p>';
+    }
+  }
+  h+='<div class="acts"><button data-close="1">Close</button></div>';
+  const sh_=document.getElementById("sheet");
+  sh_.innerHTML=h; delete sh_.dataset.n;
+  sh_.classList.add("on"); document.getElementById("scrim").classList.add("on");
+}
+
 function closeSheet(){document.getElementById("sheet").classList.remove("on");document.getElementById("scrim").classList.remove("on");}
 
 /* ===== sync ===== */
@@ -951,6 +1027,8 @@ document.getElementById("grid").addEventListener("click",e=>{
   const b=e.target.closest(".blk"); if(b)openSheet(b.dataset.n);
 });
 document.getElementById("sheet").addEventListener("click",e=>{
+  const chip=e.target.closest(".goin span[data-pid]");
+  if(chip){ openPerson(chip.dataset.pid); return; }
   const b=e.target.closest("button"); if(!b)return;
   if(b.dataset.close){closeSheet();return;}
   if(b.dataset.go!==undefined){toggle(document.getElementById("sheet").dataset.n,b.dataset.go==="1");closeSheet();}
@@ -973,6 +1051,10 @@ function setFilter(v){
 }
 document.getElementById("fMine").addEventListener("click",()=>setFilter("mine"));
 document.getElementById("fCrew").addEventListener("click",()=>setFilter("crew"));
+document.getElementById("crew").addEventListener("keydown",e=>{
+  const row=e.target.closest&&e.target.closest(".person[data-pid]");
+  if(row&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); openPerson(row.dataset.pid); }
+});
 document.getElementById("crewsBtn").addEventListener("click",toggleWelcome);
 document.getElementById("fNight").addEventListener("click",e=>{
   const on=!document.body.classList.contains("night");
@@ -998,6 +1080,8 @@ document.getElementById("followIn").addEventListener("keydown",e=>{
   if(e.key==="Enter"){ addFollow(e.target.value); e.target.value=""; }
 });
 document.getElementById("crew").addEventListener("click",e=>{
+  const row=e.target.closest(".person[data-pid]");
+  if(row&&!e.target.closest("button")){ openPerson(row.dataset.pid); return; }
   const h=e.target.closest("button[data-hide]");
   if(h){ const b=h.dataset.hide; if(hidden.has(b))hidden.delete(b); else hidden.add(b); saveFollows(); draw(); return; }
   const u=e.target.closest("button[data-unfollow]");
