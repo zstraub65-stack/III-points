@@ -111,6 +111,7 @@ Ordered by how much they would hurt.
 | Schedule unverified | Typed by hand off posters. A wrong set time is invisible until someone misses a set. |
 | Untested in the field | Check-ins, crowd grid and expiry have only ever run against a simulated festival night. |
 | Deploy is manual | Push does not deploy. A human has to run `Deploy.bat`. |
+| One crew at a time, leakily | `BOARD` is a single value from the URL hash and `push()` only writes there, but `mine` is one global localStorage key, so switching crews carries your picks into the new board and the two copies then drift apart. `hasLeft` is scoped per board; picks are not. |
 | Clash detection is self-only | It does not look at the crew's picks. |
 | Walk times are guesses | The stage-to-stage estimates were never measured. |
 | Single region | KV is eventually consistent; two people writing in the same second can race. Low stakes here. |
@@ -152,7 +153,12 @@ prefix are all literals inside `public/index.html`.
    column order all come from the file. This is where the poster-faithful rendering
    will fight back, because the current layout is tuned to a 13-stage, 12-hour,
    2-day grid.
-5. **Then decide about auth**, because multi-festival means strangers, and the
+5. **Decide what crew membership means.** Today you belong to one board and can
+   follow others read-only. Real multi-crew membership touches more than it looks:
+   `push()` has to fan out, `mine` has to be per-board or explicitly shared, and the
+   crowd grid has to decide whose markers it draws when you are in two. Settle this
+   before auth, because it decides what an account would even own.
+6. **Then decide about auth**, because multi-festival means strangers, and the
    current model assumes everyone on the link is a friend.
 
 ### Things to be careful about
