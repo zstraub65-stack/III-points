@@ -177,6 +177,17 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .whead{display:flex;align-items:flex-start;gap:10px}
 .whead .t1{flex:1}
 .wx{font-size:26px;line-height:.8;padding:0 2px;opacity:.55;font-family:var(--ui)}
+.livebadge{position:absolute;left:3px;bottom:2px;font-family:var(--ui);font-size:7.5px;font-weight:800;
+  background:#0C0A14;color:#fff;border-radius:3px;padding:1px 4px;letter-spacing:.02em}
+.livebadge.fire{background:#E3112A}
+.blk.livehere{box-shadow:0 0 0 2px #E3112A inset}
+.nowline{position:absolute;left:0;right:0;border-top:2px solid #E3112A;pointer-events:none;z-index:7}
+.nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:#E3112A}
+#nowPanel{margin:12px 16px 0}
+#nowPanel .card.hot{border-color:#E3112A}
+.firetag{font-family:var(--ui);font-size:10px;font-weight:800;background:#E3112A;color:#fff;
+  border-radius:3px;padding:1px 5px;vertical-align:2px}
+.acts.checkin{margin-top:9px;padding-top:11px;border-top:2px dashed var(--rule)}
 .crewhead{display:flex;align-items:center;gap:8px;margin:14px 0 2px;padding-bottom:5px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
 .ch-name{font-family:var(--disp);font-size:14px;text-transform:uppercase;letter-spacing:.01em}
 .ch-count{font-family:var(--mono);font-size:11.5px;opacity:.7;flex:1}
@@ -222,6 +233,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <button class="tg" id="fMine" aria-pressed="false">Mine</button>
     <button class="tg" id="fCrew" aria-pressed="false">Crew</button>
     <span class="grow"></span>
+    <button class="tg" id="nowBtn" aria-pressed="false">Now</button>
     <button class="tg" id="crewsBtn" aria-pressed="false">Crews</button>
     <button class="tg" id="fNight" aria-pressed="false">Night</button>
     <div class="who" id="who">Loading the board…</div>
@@ -229,6 +241,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 
   <div id="setup" hidden></div>
   <div id="welcome" hidden></div>
+  <div id="nowPanel" hidden></div>
 
   <div id="scroll"><div id="grid"></div></div>
 
@@ -486,6 +499,13 @@ const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C"
    chevron, square, circle, cross, house. Your own crew always gets the triangle. */
 const SHAPES=["tri","dia","hex","chev","sq","cir","crs","pent"];
 
+/* Doors are 4pm ET both days. October is EDT, so 20:00 UTC. */
+const DOORS={fri:Date.UTC(2026,9,16,20,0,0),sat:Date.UTC(2026,9,17,20,0,0)};
+/* A check-in lasts until the set ends (plus a short grace), or 90 minutes,
+   whichever comes first. Phones die and people wander off, so a check-in that
+   can only be cleared by hand would quietly lie all night. */
+const GRACE=10*60*1000, MAX_LIVE=90*60*1000;
+
 let day="fri", filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false, pullAgain=false, lastPull=0;
 
 /* A person is a random id this browser keeps. No accounts, no sign in. */
@@ -616,6 +636,52 @@ const INFO={
 "sat|Crespi Drum Syndicate":"Live drum ensemble. No idea how it translates to this setting, but it is the only thing like it on the bill."
 };
 
+/* ===== live check-ins ===== */
+function rowFor(key){
+  const [d,n]=key.split("|");
+  const r=DATA[d]&&DATA[d].find(x=>x[1]===n);
+  return r?{d,r}:null;
+}
+/* real-world start and end of a set */
+function windowFor(key){
+  const f=rowFor(key); if(!f)return null;
+  return {start:DOORS[f.d]+T(f.r[2])*60000, end:DOORS[f.d]+T(f.r[3])*60000};
+}
+function isLive(at,now){
+  if(!at||!at.s)return false;
+  const w=windowFor(at.s); if(!w)return false;
+  const t=Number(at.t)||0;
+  return now < Math.min(w.end+GRACE, t+MAX_LIVE);
+}
+/* everyone currently checked in at this set, hidden crews excluded */
+function liveAt(key,now){
+  now=now||Date.now();
+  return people.filter(p=>!hidden.has(p.board)&&p.at&&p.at.s===key&&isLive(p.at,now));
+}
+function allLive(now){
+  now=now||Date.now();
+  return people.filter(p=>!hidden.has(p.board)&&isLive(p.at,now));
+}
+function myCheckIn(){
+  const me=people.find(p=>p.person===PID);
+  return me&&isLive(me.at,Date.now())?me.at:null;
+}
+function since(t){
+  const m=Math.max(0,Math.round((Date.now()-t)/60000));
+  if(m<1)return "just now";
+  if(m<60)return m+" min";
+  return Math.floor(m/60)+"h "+(m%60)+"m";
+}
+/* where the festival clock is right now, in grid minutes, or null if not during a day */
+function nowMinutes(){
+  const n=Date.now();
+  for(const d of ["fri","sat"]){
+    const m=(n-DOORS[d])/60000;
+    if(m>=-30&&m<=SPAN+30)return {day:d,min:m};
+  }
+  return null;
+}
+
 /* ===== clashes, on your own picks ===== */
 function clashes(d){
   const rows=DATA[d].filter(r=>mine.has(k(d,r[1])));
@@ -638,23 +704,31 @@ function railHTML(stick,side){
   return h;
 }
 function renderGrid(){
-  const rows=DATA[day], cs=clashSet(day);
+  const rows=DATA[day], cs=clashSet(day), NOW=Date.now();
   let h=railHTML(true,"l");
   ORDER.forEach(st=>{
     const [c,dark]=ST[st];
     h+=`<div class="col${st==="Vertex"?" gap":""}"><div class="hd"><span class="lab" style="background:${c};color:${dark?"#F4F2EE":"#0C0A14"}">${esc(st)}</span></div><div class="track" style="height:${H}px">`;
     for(let t=0;t<=SPAN;t+=60)h+=`<div class="hr" style="top:${t*PPM+PAD}px"></div>`;
+    const nm=nowMinutes();
+    if(nm&&nm.day===day&&nm.min>=0&&nm.min<=SPAN)h+=`<div class="nowline" style="top:${nm.min*PPM+PAD}px"></div>`;
     rows.filter(r=>r[0]===st).forEach(r=>{
       const key=k(day,r[1]), s=T(r[2]), e=T(r[3]);
       const isMine=mine.has(key), isRec=!!REC[key], hasNote=!!(REC[key]||NOTE[key]||INFO[key]), cw=crewFor(key);
+      const hereNow=liveAt(key,NOW);
       const cls=["blk"];
       if(dark)cls.push("ink");
       if(st==="Grand Central")cls.push("dash");
       if(isMine)cls.push("mine"); else if(hasNote)cls.push("rec");
       if(onGrid(key))cls.push("on");
+      if(hereNow.length)cls.push("livehere");
       h+=`<button class="${cls.join(" ")}" data-n="${esc(r[1])}" style="background:${st==="Grand Central"?"rgba(246,205,166,.75)":c};top:${s*PPM+PAD}px;height:${(e-s)*PPM-3}px">`;
       if(cs.has(r[1]))h+=`<span class="cl"></span>`;
       if(isMine)h+=`<span class="star">&#9733;</span>`; else if(isRec)h+=`<span class="star pickdot">&#9679;</span>`;
+      if(hereNow.length){
+        const fire=hereNow.some(p=>p.at.fire);
+        h+=`<span class="livebadge${fire?" fire":""}">${fire?"\u25B2 ":""}${hereNow.length} here</span>`;
+      }
       h+=`<span class="nm">${esc(r[1])}</span>`;
       if(r[4])h+=`<span class="b2b">${esc(r[4])}</span>`;
       h+=`<span class="tm">${sh(s)}&ndash;${sh(e)}</span>`;
@@ -770,10 +844,38 @@ function openSheet(name){
   h+=`<div class="acts">
     <button class="${isMine?"":"fill"}" data-go="0">Not going</button>
     <button class="${isMine?"fill":""}" data-go="1">On my list &#9733;</button>
-    <button data-close="1">Close</button></div><div class="goin" id="goin"></div>`;
+    <button data-close="1">Close</button></div>`;
+  /* live check-in controls */
+  const nowAt=myCheckIn(), hereNow=nowAt&&nowAt.s===key;
+  const win=windowFor(key), nowMs=Date.now();
+  const onNow=win&&nowMs>=win.start-15*60000&&nowMs<=win.end+GRACE;
+  h+=`<div class="acts checkin">`;
+  if(hereNow){
+    h+=`<button class="fill" data-checkout="1">Leave</button>`;
+    h+=`<button class="${nowAt.fire?"fill":""}" data-fire="1">${nowAt.fire?"Going off \u25B2":"Mark it going off"}</button>`;
+  }else{
+    h+=`<button data-checkin="1">I'm here now</button>`;
+    if(!onNow)h+=`<span class="t2" style="align-self:center">not on right now</span>`;
+  }
+  h+=`</div>`;
+  if(liveAt(key).length)h+=`<div class="t1" style="margin-top:14px">Here right now</div><div class="goin" id="herenow"></div>`;
+  h+=`<div class="goin" id="goin"></div>`;
   const s=document.getElementById("sheet");
   s.innerHTML=h; s.dataset.n=name;
   s.classList.add("on"); document.getElementById("scrim").classList.add("on");
+  const hbox=document.getElementById("herenow");
+  if(hbox){
+    liveAt(key).forEach(p=>{
+      const sp=document.createElement("span");
+      sp.dataset.pid=p.person; sp.style.cursor="pointer";
+      const dot=document.createElement("span");
+      dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
+      const t=document.createElement("em"); t.style.fontStyle="normal";
+      t.textContent=(p.person===PID?"You":(p.name||"Someone"))+
+        (p.at.fire?" \u25B2":"")+" \u00b7 "+since(p.at.t);
+      sp.append(dot,t); hbox.appendChild(sp);
+    });
+  }
   const box=document.getElementById("goin");
   cw.forEach(p=>{
     const sp=document.createElement("span");
@@ -845,14 +947,14 @@ function hideSetup(){
 function cacheSave(){
   try{
     localStorage.setItem(LS,JSON.stringify([...mine]));
-    localStorage.setItem(LSC,JSON.stringify(people.map(p=>({board:p.board,person:p.person,name:p.name,sets:[...p.sets]}))));
+    localStorage.setItem(LSC,JSON.stringify(people.map(p=>({board:p.board,person:p.person,name:p.name,sets:[...p.sets],at:p.at||null}))));
   }catch(e){}
 }
 function cacheLoad(){
   try{
     const m=JSON.parse(localStorage.getItem(LS)||"[]"); if(Array.isArray(m))mine=new Set(m);
     const c=JSON.parse(localStorage.getItem(LSC)||"[]");
-    if(Array.isArray(c))people=c.map(p=>({board:p.board||BOARD,person:p.person,name:p.name,sets:new Set(p.sets||[])}));
+    if(Array.isArray(c))people=c.map(p=>({board:p.board||BOARD,person:p.person,name:p.name,sets:new Set(p.sets||[]),at:p.at||null}));
   try{
     const f=JSON.parse(localStorage.getItem(LSF)||"[]"); if(Array.isArray(f))follows=f.filter(x=>typeof x==="string");
     const h=JSON.parse(localStorage.getItem(LSH)||"[]"); if(Array.isArray(h))hidden=new Set(h);
@@ -874,10 +976,12 @@ async function pull(){
       if(!r.ok)throw new Error("http "+r.status);
       return (j.people||[]).map(p=>({
         board:b, person:p.person, name:p.name||"",
-        sets:new Set(Array.isArray(p.sets)?p.sets:[])
+        sets:new Set(Array.isArray(p.sets)?p.sets:[]),
+        at:p.at||null
       }));
     }));
     hideSetup();
+    if(pendingAt)flushPending();
     people=results.flat();
     online=true; cacheSave(); draw();
   }catch(e){
@@ -933,6 +1037,80 @@ function showWelcome(force){
   });
 }
 
+function renderNow(){
+  const el=document.getElementById("nowPanel");
+  if(!el||el.hidden)return;
+  const now=Date.now(), live=allLive(now);
+  el.textContent="";
+
+  const card=document.createElement("div");
+  card.className="card";
+  const mineAt=myCheckIn();
+  let head='<div class="whead"><span class="t1">Where everyone is</span><button class="wx" id="nowClose" aria-label="Close">&times;</button></div>';
+  const nm=nowMinutes();
+  head+='<div class="t2">'+(nm?("Festival clock: "+(nm.day==="fri"?"Friday":"Saturday")+" "+fmt(Math.max(0,Math.round(nm.min))))
+    :"Not during the festival right now. Check-ins still work for testing.")+'</div>';
+  card.innerHTML=head;
+  el.appendChild(card);
+
+  if(mineAt){
+    const f=rowFor(mineAt.s);
+    const me=document.createElement("div");
+    me.className="card";
+    me.innerHTML='<div class="t1">You are at</div><div class="t3"><b>'+esc(f?f.r[1]:mineAt.s)+'</b>'+
+      (f?" &middot; "+esc(f.r[0]):"")+' &middot; since '+esc(since(mineAt.t))+(mineAt.fire?' &middot; going off':'')+'</div>'+
+      '<div class="tools" style="margin:9px 0 0"><button id="nowLeave">Leave</button></div>';
+    el.appendChild(me);
+  }
+
+  if(!live.length){
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML='<div class="t3">Nobody is checked in right now. Open any set and tap <b>I am here now</b> to say where you are. It clears itself when the set ends, so nobody has to remember to check out.</div>';
+    el.appendChild(d);
+    return;
+  }
+
+  /* group by set so a busy room reads as one row */
+  const bySet={};
+  live.forEach(p=>{ (bySet[p.at.s]=bySet[p.at.s]||[]).push(p); });
+  const keys=Object.keys(bySet).sort((a,b)=>bySet[b].length-bySet[a].length);
+  keys.forEach(key=>{
+    const f=rowFor(key), grp=bySet[key];
+    const fire=grp.some(p=>p.at.fire);
+    const row=document.createElement("div");
+    row.className="card"+(fire?" hot":"");
+    row.innerHTML='<div class="t1">'+esc(f?f.r[1]:key)+(fire?' <span class="firetag">going off</span>':'')+'</div>'+
+      '<div class="t2">'+(f?esc(f.r[0])+" &middot; "+sh(T(f.r[2]))+"&ndash;"+sh(T(f.r[3])):"")+'</div>';
+    const who=document.createElement("div");
+    who.className="goin";
+    grp.forEach(p=>{
+      const sp=document.createElement("span");
+      sp.dataset.pid=p.person; sp.style.cursor="pointer";
+      const dot=document.createElement("span");
+      dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
+      const t=document.createElement("em"); t.style.fontStyle="normal";
+      t.textContent=(p.person===PID?"You":(p.name||"Someone"))+" \u00b7 "+since(p.at.t);
+      sp.append(dot,t); who.appendChild(sp);
+    });
+    row.appendChild(who);
+    el.appendChild(row);
+  });
+}
+
+function syncNowBtn(){
+  const b=document.getElementById("nowBtn"), p=document.getElementById("nowPanel");
+  if(b&&p)b.setAttribute("aria-pressed",String(!p.hidden));
+}
+function toggleNow(){
+  const p=document.getElementById("nowPanel");
+  if(!p)return;
+  p.hidden=!p.hidden;
+  if(!p.hidden){ renderNow(); p.scrollIntoView&&p.scrollIntoView({block:"nearest"}); }
+  else p.textContent="";
+  syncNowBtn();
+}
+
 function syncCrewsBtn(){
   const b=document.getElementById("crewsBtn"), w=document.getElementById("welcome");
   if(b&&w)b.setAttribute("aria-pressed",String(!w.hidden));
@@ -953,6 +1131,38 @@ function statusLine(){
   else if(!online)msg="Offline. Your picks save here and sync when you are back on.";
   else msg=n?(n===1?"1 other person on this board":n+" others on this board"):"You are the first one here";
   document.getElementById("who").innerHTML=dot+msg;
+}
+
+async function checkIn(key,fire){
+  const at=key?{s:key,t:Date.now(),fire:!!fire}:null;
+  const me=people.find(p=>p.person===PID);
+  if(me)me.at=at; else people.push({board:BOARD,person:PID,name:myName,sets:[...mine],at});
+  draw();
+  if(!configured())return;
+  try{
+    const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({person:PID,at})});
+    if(!r.ok)throw new Error("http "+r.status);
+    online=true; pull();
+    toast(key?(fire?"Checked in, marked as going off":"Checked in"):"Checked out");
+  }catch(e){
+    online=false; statusLine();
+    toast("No signal. Saved here, will send when you are back on.");
+    pendingAt=at===null?{clear:true}:at;
+  }
+}
+/* a check-in made with no signal is retried on the next successful contact */
+let pendingAt=null;
+async function flushPending(){
+  if(!pendingAt||!configured())return;
+  const at=pendingAt.clear?null:pendingAt;
+  try{
+    const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({person:PID,at})});
+    if(r.ok){ pendingAt=null; toast("Check-in sent"); }
+  }catch(e){}
 }
 
 function toggle(name,on){
@@ -1032,6 +1242,9 @@ document.getElementById("sheet").addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b)return;
   if(b.dataset.close){closeSheet();return;}
   if(b.dataset.go!==undefined){toggle(document.getElementById("sheet").dataset.n,b.dataset.go==="1");closeSheet();}
+  if(b.dataset.checkin){ checkIn(k(day,document.getElementById("sheet").dataset.n),false); closeSheet(); }
+  if(b.dataset.checkout){ checkIn(null); closeSheet(); }
+  if(b.dataset.fire){ const c=myCheckIn(); if(c)checkIn(c.s,!c.fire); closeSheet(); }
 });
 document.getElementById("scrim").addEventListener("click",closeSheet);
 document.getElementById("dayseg").addEventListener("click",e=>{
@@ -1054,6 +1267,13 @@ document.getElementById("fCrew").addEventListener("click",()=>setFilter("crew"))
 document.getElementById("crew").addEventListener("keydown",e=>{
   const row=e.target.closest&&e.target.closest(".person[data-pid]");
   if(row&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); openPerson(row.dataset.pid); }
+});
+document.getElementById("nowBtn").addEventListener("click",toggleNow);
+document.getElementById("nowPanel").addEventListener("click",e=>{
+  if(e.target.closest("#nowClose")){ toggleNow(); return; }
+  if(e.target.closest("#nowLeave")){ checkIn(null); return; }
+  const chip=e.target.closest("span[data-pid]");
+  if(chip)openPerson(chip.dataset.pid);
 });
 document.getElementById("crewsBtn").addEventListener("click",toggleWelcome);
 document.getElementById("fNight").addEventListener("click",e=>{
@@ -1112,7 +1332,7 @@ document.getElementById("leaveBtn").addEventListener("click",async()=>{
 });
 window.addEventListener("hashchange",()=>location.reload());
 
-function draw(){renderGrid();renderPanels();statusLine();}
+function draw(){renderGrid();renderPanels();renderNow();statusLine();}
 
 /* ===== boot ===== */
 cacheLoad();
@@ -1135,6 +1355,9 @@ draw();
     const want=idle<60000?5000:30000;
     if(Date.now()-lastPull>=want-250)pull();
   },5000);
+  /* check-ins age and expire on their own, so refresh the view every half minute
+     even when the server has nothing new to say */
+  setInterval(()=>{ if(!document.hidden)draw(); },30000);
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden)pull(); });
   window.addEventListener("online",()=>{ pull(); push(); });
 }

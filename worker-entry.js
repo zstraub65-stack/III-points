@@ -54,7 +54,7 @@ async function readBoard(env, board) {
 
 function asList(agg) {
   return Object.entries(agg.people || {})
-    .map(([person, v]) => ({ person, name: v.name || "", sets: v.sets || [], updated: v.updated || 0 }))
+    .map(([person, v]) => ({ person, name: v.name || "", sets: v.sets || [], at: v.at || null, updated: v.updated || 0 }))
     .sort((a, b) => (a.updated || 0) - (b.updated || 0));
 }
 
@@ -85,26 +85,40 @@ async function handlePicks(request, env, url) {
       return json({ ok: true, removed: true });
     }
 
+    const prev = agg.people[person] || {};
+    const next = { name: prev.name || "", sets: prev.sets || [], at: prev.at || null };
+
     // Names are typed by whoever opens the link. Stored as plain text; the page
     // renders them with textContent and never as markup.
-    const name = String(body.name || "").replace(/[\u0000-\u001F<>]/g, "").trim().slice(0, 24);
+    if (body.name !== undefined) {
+      next.name = String(body.name || "").replace(/[\u0000-\u001F<>]/g, "").trim().slice(0, 24);
+    }
 
-    const sets = Array.isArray(body.sets)
-      ? body.sets.filter(s => typeof s === "string" && s.length <= 80).slice(0, 400)
-      : [];
+    if (Array.isArray(body.sets)) {
+      next.sets = body.sets.filter(x => typeof x === "string" && x.length <= 80).slice(0, 400);
+    }
 
-    // A write only ever touches this person's own entry.
-    agg.people[person] = { name, sets, updated: Date.now() };
+    // "at" is a live check-in: the set this person says they are at right now.
+    // Passing null clears it. The page decides when a check-in has gone stale.
+    if ("at" in body) {
+      const a = body.at;
+      next.at = (a && typeof a.s === "string" && a.s.length <= 80)
+        ? { s: a.s, t: Number(a.t) || Date.now(), fire: !!a.fire }
+        : null;
+    }
+
+    next.updated = Date.now();
+    agg.people[person] = next;
 
     // Guard against one board growing without bound.
     const ids = Object.keys(agg.people);
     if (ids.length > 200) {
-      ids.sort((a, b) => (agg.people[a].updated || 0) - (agg.people[b].updated || 0));
+      ids.sort((x, y) => (agg.people[x].updated || 0) - (agg.people[y].updated || 0));
       ids.slice(0, ids.length - 200).forEach(id => delete agg.people[id]);
     }
 
     await env.PICKS.put(keyFor(board), JSON.stringify(agg), { expirationTtl: TTL });
-    return json({ ok: true, saved: sets.length });
+    return json({ ok: true, saved: next.sets.length });
   }
 
   return json({ error: "method_not_allowed" }, 405);
