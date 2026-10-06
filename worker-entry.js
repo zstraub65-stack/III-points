@@ -79,11 +79,40 @@ async function handlePicks(request, env, url) {
     const agg = await readBoard(env, board);
     agg.people = agg.people || {};
 
+    // Who has left. Their writes are refused until they rejoin, otherwise the
+    // next POST from a still-open browser silently puts them back.
+    agg.gone = agg.gone || {};
+    const markGone = (id) => {
+      delete agg.people[id];
+      agg.gone[id] = Date.now();
+      const ids = Object.keys(agg.gone);
+      if (ids.length > 100) {
+        ids.sort((x, y) => agg.gone[x] - agg.gone[y]);
+        ids.slice(0, ids.length - 100).forEach((id2) => delete agg.gone[id2]);
+      }
+    };
+
     if (body.leave) {
-      delete agg.people[person];
+      markGone(person);
       await env.PICKS.put(keyFor(board), JSON.stringify(agg), { expirationTtl: TTL });
-      return json({ ok: true, removed: true });
+      return json({ ok: true, removed: true, left: true });
     }
+
+    // Removing somebody else, by their id. The board has no accounts, so any
+    // member can do this; it is the same trust level as editing the board at all.
+    if (typeof body.remove === "string" && body.remove) {
+      const target = clean(body.remove, 40);
+      if (!target) return json({ error: "bad_target" }, 400);
+      markGone(target);
+      await env.PICKS.put(keyFor(board), JSON.stringify(agg), { expirationTtl: TTL });
+      return json({ ok: true, removed: true, person: target });
+    }
+
+    // Coming back is deliberate and clears the mark.
+    if (body.rejoin) delete agg.gone[person];
+
+    // Anyone who left stays gone, whatever their browser tries to send.
+    if (agg.gone[person]) return json({ ok: true, blocked: true });
 
     const prev = agg.people[person] || {};
     const next = { name: prev.name || "", sets: prev.sets || [], at: prev.at || null };

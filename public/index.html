@@ -292,6 +292,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
       <div class="t2" style="margin-top:2px">This is how you show up to everyone else.</div>
       <input id="nameIn" class="fld" maxlength="24" placeholder="e.g. Winston" autocapitalize="words" autocorrect="off" spellcheck="false">
       <div class="tools" style="margin:10px 0 0"><button id="leaveBtn">Remove me from the board</button></div>
+      <div class="t2" id="leaveNote" style="margin-top:7px"></div>
     </div>
     <div id="crew"></div>
     <div class="fine" id="fine"></div>
@@ -503,6 +504,27 @@ const BOARD = ((location.hash.match(/board=([A-Za-z0-9_-]{1,32})/) || [])[1] || 
 
 const LS="iiip26-mine", LSN="iiip26-name", LSP="iiip26-pid", LSC="iiip26-cache";
 const LSF="iiip26-follows", LSH="iiip26-hidden", LSW="iiip26-welcomed";
+const LSX="iiip26-left";
+/* Scoped per crew, so leaving Boston does not mute you on your own crew. */
+function hasLeft(b){
+  try{ return (JSON.parse(localStorage.getItem(LSX)||"[]")||[]).includes(b||BOARD); }
+  catch(e){ return false; }
+}
+function setLeft(on,b){
+  b=b||BOARD;
+  try{
+    let a=JSON.parse(localStorage.getItem(LSX)||"[]"); if(!Array.isArray(a))a=[];
+    a=a.filter(x=>x!==b); if(on)a.push(b);
+    localStorage.setItem(LSX,JSON.stringify(a));
+  }catch(e){}
+  syncLeaveBtn();
+}
+/* The server says so when a write is refused: trust it and stop pushing, which
+   is what makes somebody else removing you stick without your help. */
+function noteBlocked(j){
+  if(j&&j.blocked){ setLeft(true); draw(); return true; }
+  return false;
+}
 let follows=[], hidden=new Set();
 const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C","#6B4F1D",
             "#1A1A1A","#C4A000","#2E7D8F","#9B1B5A"];
@@ -907,6 +929,20 @@ function openSheet(name){
     sp.append(dot,t); box.appendChild(sp);
   });
 }
+/* Removing somebody marks them gone server side, so their browser stops
+   recreating them even if they never touch the page again. */
+async function dropPerson(pid){
+  if(!configured())return;
+  try{
+    const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({person:PID,remove:pid})});
+    if(!r.ok)throw new Error("http "+r.status);
+    const who=(people.find(x=>x.person===pid)||{}).name;
+    toast("Removed "+(who||"them")+" from "+BOARD);
+    pull();
+  }catch(e){ toast("Could not reach the crew"); }
+}
 function openPerson(pid){
   const p=people.find(x=>x.person===pid);
   if(!p)return;
@@ -937,7 +973,11 @@ function openPerson(pid){
       h+='<p>'+(shared?("You are both down for "+shared+(shared===1?" set.":" sets.")):"Nothing in common so far.")+'</p>';
     }
   }
-  h+='<div class="acts"><button data-close="1">Close</button></div>';
+  h+='<div class="acts"><button data-close="1">Close</button>';
+  /* Only your own crew, and never yourself: you leave from Crews. */
+  if(p.person!==PID&&p.board===BOARD)
+    h+='<button data-drop="'+esc(p.person)+'">Remove from crew</button>';
+  h+='</div>';
   const sh_=document.getElementById("sheet");
   sh_.innerHTML=h; delete sh_.dataset.n;
   sh_.classList.add("on"); document.getElementById("scrim").classList.add("on");
@@ -1054,8 +1094,8 @@ async function pull(){
 }
 
 function push(){
-  cacheSave();
-  if(!configured())return;
+  cacheSave();                 // keep your own picks on this device either way
+  if(!configured()||hasLeft())return;
   clearTimeout(pushT);
   pushT=setTimeout(async()=>{
     try{
@@ -1063,6 +1103,8 @@ function push(){
         method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({person:PID,name:myName,sets:[...mine]})});  // always BOARD, never a followed crew
       if(!r.ok)throw new Error("http "+r.status);
+      const j=await r.json().catch(()=>({}));
+      if(noteBlocked(j))return;
       online=true; pull();
     }catch(e){ online=false; statusLine(); }
   },600);
@@ -1196,6 +1238,7 @@ function statusLine(){
 }
 
 async function checkIn(key,fire,opts){
+  if(hasLeft()){ toast("You left this crew. Rejoin from Crews first."); return; }
   opts=opts||{};
   let at=null;
   if(key){
@@ -1218,6 +1261,7 @@ async function checkIn(key,fire,opts){
       method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({person:PID,at})});
     if(!r.ok)throw new Error("http "+r.status);
+    if(noteBlocked(await r.json().catch(()=>({}))))return;
     online=true; pull();
     toast(key?(fire?"Checked in, marked as going off":"Checked in"):"Checked out");
   }catch(e){
@@ -1229,7 +1273,7 @@ async function checkIn(key,fire,opts){
 /* a check-in made with no signal is retried on the next successful contact */
 let pendingAt=null;
 async function flushPending(){
-  if(!pendingAt||!configured())return;
+  if(!pendingAt||!configured()||hasLeft())return;
   const at=pendingAt.clear?null:pendingAt;
   try{
     const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{
@@ -1315,6 +1359,14 @@ document.getElementById("sheet").addEventListener("click",e=>{
   if(chip){ openPerson(chip.dataset.pid); return; }
   const b=e.target.closest("button"); if(!b)return;
   if(b.dataset.close){closeSheet();return;}
+  if(b.dataset.drop){
+    if(!b.dataset.armed){
+      b.dataset.armed="1"; b.textContent="Tap again to remove";
+      setTimeout(()=>{ if(b.dataset.armed){b.dataset.armed="";b.textContent="Remove from crew";} },6000);
+      return;
+    }
+    dropPerson(b.dataset.drop); closeSheet(); return;
+  }
   if(b.dataset.go!==undefined){toggle(document.getElementById("sheet").dataset.n,b.dataset.go==="1");closeSheet();}
   if(b.dataset.checkin){ checkIn(k(day,document.getElementById("sheet").dataset.n),false); closeSheet(); }
   if(b.dataset.checkout){ checkIn(null); closeSheet(); }
@@ -1410,13 +1462,46 @@ document.getElementById("nameIn").addEventListener("input",e=>{
   try{localStorage.setItem(LSN,myName);}catch(_){}
   push();
 });
-document.getElementById("leaveBtn").addEventListener("click",async()=>{
+function syncLeaveBtn(){
+  const b=document.getElementById("leaveBtn");
+  if(!b)return;
+  b.dataset.armed="";
+  b.textContent=hasLeft()?"Rejoin this crew":"Remove me from the board";
+  const n=document.getElementById("leaveNote");
+  if(n)n.textContent=hasLeft()
+    ?"You are off this crew. Nobody sees you and your check-ins are off. Your own picks are still saved on this phone."
+    :"";
+}
+document.getElementById("leaveBtn").addEventListener("click",async e=>{
+  const b=e.currentTarget;
   if(!configured())return;
+
+  if(hasLeft()){                                   // coming back
+    setLeft(false);
+    try{
+      const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({person:PID,rejoin:true,name:myName,sets:[...mine]})});
+      if(!r.ok)throw new Error("http "+r.status);
+      toast("You are back on "+BOARD); pull();
+    }catch(_){ toast("Could not reach the crew"); }
+    return;
+  }
+
+  if(!b.dataset.armed){                            // first tap only arms it
+    b.dataset.armed="1";
+    b.textContent="Tap again to remove yourself";
+    setTimeout(()=>{ if(b.dataset.armed)syncLeaveBtn(); },6000);
+    return;
+  }
+
+  setLeft(true);                                   // local first, so nothing races it back
   try{
-    await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
+    const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
       headers:{"Content-Type":"application/json"},body:JSON.stringify({person:PID,leave:true})});
-    toast("Removed you from the board"); pull();
-  }catch(e){ toast("Could not reach the board"); }
+    if(!r.ok)throw new Error("http "+r.status);
+    toast("Removed you from "+BOARD); pull();
+  }catch(_){ toast("Saved here. Will tell the crew when you are back online."); }
 });
 window.addEventListener("hashchange",()=>location.reload());
 
@@ -1426,6 +1511,7 @@ function draw(){renderGrid();renderPanels();renderNow();statusLine();}
 cacheLoad();
 document.getElementById("nameIn").value=myName;
 document.getElementById("boardName").textContent=BOARD;
+syncLeaveBtn();
 showWelcome();
 draw();
 
