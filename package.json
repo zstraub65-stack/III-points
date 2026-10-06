@@ -1,0 +1,11 @@
+{
+  "name": "iii-points-board",
+  "private": true,
+  "description": "Shared festival set-times board. Cloudflare Worker + static page, no build step.",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0"
+  }
+}
