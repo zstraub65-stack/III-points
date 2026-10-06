@@ -102,9 +102,21 @@ async function handlePicks(request, env, url) {
     // Passing null clears it. The page decides when a check-in has gone stale.
     if ("at" in body) {
       const a = body.at;
-      next.at = (a && typeof a.s === "string" && a.s.length <= 80)
-        ? { s: a.s, t: Number(a.t) || Date.now(), fire: !!a.fire }
-        : null;
+      if (a && typeof a.s === "string" && a.s.length <= 80) {
+        next.at = { s: a.s, t: Number(a.t) || Date.now(), fire: !!a.fire };
+        // p is where in the crowd: [col, row] on a 4x4 grid, stage at the top.
+        if (Array.isArray(a.p) && a.p.length === 2) {
+          const c = Math.round(Number(a.p[0])), r = Math.round(Number(a.p[1]));
+          if (c >= 0 && c <= 3 && r >= 0 && r <= 3) next.at.p = [c, r];
+        }
+        // n is a short landmark note, which beats coordinates for finding someone.
+        if (typeof a.n === "string") {
+          const n = a.n.replace(/[\u0000-\u001F<>]/g, "").trim().slice(0, 24);
+          if (n) next.at.n = n;
+        }
+      } else {
+        next.at = null;
+      }
     }
 
     next.updated = Date.now();

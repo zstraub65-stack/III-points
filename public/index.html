@@ -177,6 +177,17 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .whead{display:flex;align-items:flex-start;gap:10px}
 .whead .t1{flex:1}
 .wx{font-size:26px;line-height:.8;padding:0 2px;opacity:.55;font-family:var(--ui)}
+.spotwrap{margin-top:9px}
+.stagebar{background:var(--ink);color:var(--rail);font-family:var(--disp);font-size:11px;
+  letter-spacing:.14em;text-align:center;padding:4px 0 3px;border-radius:5px 5px 0 0}
+.spot{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--ink);
+  padding:3px;border-radius:0 0 5px 5px}
+.spot .cell{aspect-ratio:1;background:var(--rail);border-radius:3px;display:flex;
+  align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;padding:2px;min-height:42px}
+.spot .cell.me{background:#F2A03D;box-shadow:inset 0 0 0 2px var(--ink)}
+.spot .cell i{width:11px;height:11px;display:block}
+.spot .cell b{font-family:var(--ui);font-size:9px;font-weight:800}
+.spotfoot{font-size:11.5px;opacity:.7;margin-top:5px;text-align:center}
 .livebadge{position:absolute;left:3px;bottom:2px;font-family:var(--ui);font-size:7.5px;font-weight:800;
   background:#0C0A14;color:#fff;border-radius:3px;padding:1px 4px;letter-spacing:.02em}
 .livebadge.fire{background:#E3112A}
@@ -858,6 +869,15 @@ function openSheet(name){
     if(!onNow)h+=`<span class="t2" style="align-self:center">not on right now</span>`;
   }
   h+=`</div>`;
+  if(hereNow){
+    h+=`<div class="t1" style="margin-top:14px">Where in the crowd</div>`;
+    h+=spotGrid(key);
+    const n=(nowAt&&nowAt.n)||"";
+    h+=`<input id="spotNote" class="fld" maxlength="24" placeholder="landmark, e.g. by the sound booth" value="${esc(n)}">`;
+  }else if(liveAt(key).some(p=>p.at&&Array.isArray(p.at.p))){
+    h+=`<div class="t1" style="margin-top:14px">Where they are</div>`;
+    h+=spotGrid(key);
+  }
   if(liveAt(key).length)h+=`<div class="t1" style="margin-top:14px">Here right now</div><div class="goin" id="herenow"></div>`;
   h+=`<div class="goin" id="goin"></div>`;
   const s=document.getElementById("sheet");
@@ -871,8 +891,7 @@ function openSheet(name){
       const dot=document.createElement("span");
       dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
       const t=document.createElement("em"); t.style.fontStyle="normal";
-      t.textContent=(p.person===PID?"You":(p.name||"Someone"))+
-        (p.at.fire?" \u25B2":"")+" \u00b7 "+since(p.at.t);
+      t.textContent=liveLabel(p);
       sp.append(dot,t); hbox.appendChild(sp);
     });
   }
@@ -922,6 +941,49 @@ function openPerson(pid){
   const sh_=document.getElementById("sheet");
   sh_.innerHTML=h; delete sh_.dataset.n;
   sh_.classList.add("on"); document.getElementById("scrim").classList.add("on");
+}
+
+/* 4x4 crowd grid. Stage is row 0. Returns markup; the sheet wires the taps. */
+function spotGrid(key){
+  const now=Date.now();
+  const here=liveAt(key,now);
+  const meAt=myCheckIn();
+  const mine_=(meAt&&meAt.s===key&&Array.isArray(meAt.p))?meAt.p:null;
+
+  /* who is in each cell */
+  const cells={};
+  here.forEach(p=>{
+    if(!p.at||!Array.isArray(p.at.p))return;
+    const id=p.at.p[0]+","+p.at.p[1];
+    (cells[id]=cells[id]||[]).push(p);
+  });
+
+  let h='<div class="spotwrap"><div class="stagebar">STAGE</div><div class="spot">';
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+    const id=c+","+r;
+    const who=cells[id]||[];
+    const isMine=mine_&&mine_[0]===c&&mine_[1]===r;
+    h+='<button class="cell'+(isMine?" me":"")+'" data-cell="'+id+'" aria-label="'+esc(cellName(c,r))+'">';
+    who.slice(0,4).forEach(p=>{
+      h+='<i class="mk mk-'+shapeFor(p.board)+'" style="background:'+colorFor(p.person)+'"></i>';
+    });
+    if(who.length>4)h+='<b>+'+(who.length-4)+'</b>';
+    h+='</button>';
+  }
+  h+='</div><div class="spotfoot">Tap where you are. Stage is at the top.</div></div>';
+  return h;
+}
+/* One line describing a live check-in: who, going off, where, how long. */
+function liveLabel(p){
+  let t=(p.person===PID?"You":(p.name||"Someone"))+(p.at.fire?" \u25B2":"");
+  if(Array.isArray(p.at.p))t+=" \u00b7 "+cellName(p.at.p[0],p.at.p[1]);
+  if(p.at.n)t+=" \u00b7 "+p.at.n;
+  return t+" \u00b7 "+since(p.at.t);
+}
+function cellName(c,r){
+  const across=["far left","left","right","far right"][c];
+  const back=["at the front","front half","back half","at the back"][r];
+  return back+", "+across;
 }
 
 function closeSheet(){document.getElementById("sheet").classList.remove("on");document.getElementById("scrim").classList.remove("on");}
@@ -1090,7 +1152,7 @@ function renderNow(){
       const dot=document.createElement("span");
       dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
       const t=document.createElement("em"); t.style.fontStyle="normal";
-      t.textContent=(p.person===PID?"You":(p.name||"Someone"))+" \u00b7 "+since(p.at.t);
+      t.textContent=liveLabel(p);
       sp.append(dot,t); who.appendChild(sp);
     });
     row.appendChild(who);
@@ -1133,8 +1195,20 @@ function statusLine(){
   document.getElementById("who").innerHTML=dot+msg;
 }
 
-async function checkIn(key,fire){
-  const at=key?{s:key,t:Date.now(),fire:!!fire}:null;
+async function checkIn(key,fire,opts){
+  opts=opts||{};
+  let at=null;
+  if(key){
+    at={s:key,t:Date.now(),fire:!!fire};
+    /* keep the spot and note when you are only toggling "going off" */
+    const cur=myCheckIn();
+    const keep=cur&&cur.s===key;
+    const p=("p" in opts)?opts.p:(keep?cur.p:null);
+    const n=("n" in opts)?opts.n:(keep?cur.n:null);
+    if(Array.isArray(p)&&p.length===2)at.p=[p[0],p[1]];
+    if(typeof n==="string"&&n.trim())at.n=n.trim().slice(0,24);
+    if(keep)at.t=cur.t;   // do not reset how long you have been there
+  }
   const me=people.find(p=>p.person===PID);
   if(me)me.at=at; else people.push({board:BOARD,person:PID,name:myName,sets:[...mine],at});
   draw();
@@ -1245,6 +1319,20 @@ document.getElementById("sheet").addEventListener("click",e=>{
   if(b.dataset.checkin){ checkIn(k(day,document.getElementById("sheet").dataset.n),false); closeSheet(); }
   if(b.dataset.checkout){ checkIn(null); closeSheet(); }
   if(b.dataset.fire){ const c=myCheckIn(); if(c)checkIn(c.s,!c.fire); closeSheet(); }
+  if(b.dataset.cell){
+    const c=myCheckIn(); if(!c)return;
+    const parts=b.dataset.cell.split(",").map(Number);
+    const same=Array.isArray(c.p)&&c.p[0]===parts[0]&&c.p[1]===parts[1];
+    const note=document.getElementById("spotNote");
+    checkIn(c.s,c.fire,{p:same?null:parts,n:note?note.value:undefined});
+    const n2=document.getElementById("sheet").dataset.n;
+    if(n2)setTimeout(()=>openSheet(n2),60);   // reopen so the grid redraws
+  }
+});
+document.getElementById("sheet").addEventListener("change",e=>{
+  const n=e.target.closest("#spotNote"); if(!n)return;
+  const c=myCheckIn(); if(!c)return;
+  checkIn(c.s,c.fire,{p:c.p||null,n:n.value});
 });
 document.getElementById("scrim").addEventListener("click",closeSheet);
 document.getElementById("dayseg").addEventListener("click",e=>{
