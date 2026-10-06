@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>III Points Board</title>
+<meta name="description" content="Shared III Points 2026 set times grid.">
+<meta name="theme-color" content="#B9A9EF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;600;700;800&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* Poster reproduction: lavender/pink ground, grain, circuit traces, 13 stage columns
+   between hour rails. Display = Anton (poster's heavy condensed), UI = Archivo, times = DM Mono. */
+:root{
+  color-scheme: light;
+  --ground:#B9A9EF; --ground2:#D3C8F8; --edge:#7E6AC4;
+  --ink:#0C0A14; --rule:rgba(12,10,20,.30);
+  --chrome:#13111C; --chromeInk:#F4F1FF;
+  --rail:#F6F3FF;
+  --disp:Anton,"Arial Narrow",Impact,sans-serif;
+  --ui:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"DM Mono",ui-monospace,Menlo,monospace;
+  --ppm:1.5;
+}
+body.sat{--ground:#F58CA6;--ground2:#FBB9C8;--edge:#C4546F;--rail:#FFF2F5;--chrome:#2A0E16}
+body.night{--ground:#0E1016;--ground2:#171B25;--edge:#000;--ink:#ECE8DE;--rule:rgba(236,232,222,.22);
+  --chrome:#05070B;--chromeInk:#ECE8DE;--rail:#141821;color-scheme:dark}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);font-size:15px;line-height:1.4;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* grain + vignette, same as the poster's printed texture */
+#grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='120' height='120' filter='url(%23n)' opacity='.42'/></svg>")}
+body.night #grain{opacity:.28;mix-blend-mode:screen}
+#glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 55% at 50% 38%,var(--ground2) 0%,transparent 70%)}
+#page{position:relative;z-index:2}
+
+/* ---- poster masthead ---- */
+.mast{padding:12px 12px 0}
+.mastrow{display:flex;align-items:center;gap:8px}
+.tri{width:30px;height:27px;flex:0 0 30px}
+.daytag{border:2.5px solid var(--ink);border-radius:5px;padding:4px 11px 3px;display:flex;align-items:baseline;gap:7px;background:transparent}
+.daytag .d1{font-family:var(--disp);font-size:24px;letter-spacing:-.01em;line-height:1}
+.daytag .d2{font-family:var(--disp);font-size:15px;letter-spacing:.01em;line-height:1;opacity:.92}
+.clock{width:20px;height:20px;background:#F0425A;border:2px solid var(--ink);border-radius:4px;flex:0 0 20px;display:grid;place-items:center}
+.clock span{display:block;width:2px;height:7px;background:var(--ink);transform:rotate(38deg);transform-origin:bottom}
+.yr{font-family:var(--disp);font-size:12px;background:#B4E34B;border:2px solid var(--ink);border-radius:4px;padding:2px 7px 1px;line-height:1.1}
+.trace{flex:1;height:22px;min-width:16px;opacity:.72}
+.logo{font-family:var(--disp);font-size:19px;letter-spacing:-.03em;background:linear-gradient(180deg,#CFE6FF,#8FB6E8);
+  border:2.5px solid var(--ink);border-radius:5px;padding:3px 8px 2px;color:#0C1830;white-space:nowrap;
+  text-shadow:0 1px 0 rgba(255,255,255,.7)}
+
+/* ---- controls ---- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--chrome);color:var(--chromeInk);
+  margin-top:10px;padding:7px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.seg{display:flex;background:rgba(255,255,255,.13);border-radius:6px;padding:2px}
+.seg button{padding:6px 12px;border-radius:4px;font-size:13px;font-weight:800;opacity:.62;font-family:var(--ui)}
+.seg button[aria-pressed="true"]{background:var(--chromeInk);color:var(--chrome);opacity:1}
+.tg{padding:6px 10px;border:1px solid rgba(255,255,255,.28);border-radius:6px;font-size:12px;font-weight:700;opacity:.7}
+.tg[aria-pressed="true"]{background:var(--chromeInk);color:var(--chrome);opacity:1;border-color:transparent}
+.grow{flex:1}
+.who{font-size:11.5px;opacity:.78;font-weight:600;padding-left:2px;width:100%}
+
+/* ---- grid ---- */
+#scroll{overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+#grid{display:flex;min-width:max-content;padding:0 0 14px}
+.rail{width:44px;flex:0 0 44px}
+.rail.stick{position:sticky;left:0;z-index:20;background:var(--ground)}
+.rail .hd{font-family:var(--disp);font-size:10px}
+.col{width:120px;flex:0 0 120px}
+.col.gap{margin-left:9px;border-left:2px dashed var(--rule)}
+.hd{position:sticky;top:calc(44px + env(safe-area-inset-top,0px));z-index:18;background:var(--ground);
+  height:46px;display:flex;align-items:center;justify-content:center;text-align:center;
+  border-bottom:2.5px solid var(--ink);padding:3px 4px}
+.hd .lab{font-family:var(--disp);font-size:12.5px;line-height:1;letter-spacing:-.01em;
+  text-transform:uppercase;padding:3px 6px 2px;border-radius:4px;border:2px solid var(--ink);display:inline-block}
+.track{position:relative}
+.hr{position:absolute;left:0;right:0;border-top:1px dashed var(--rule)}
+.tick{position:absolute;left:0;right:3px;font-family:var(--disp);font-size:10.5px;text-align:right;
+  transform:translateY(-6px);letter-spacing:-.02em}
+.rail.r .tick{text-align:left;left:4px;right:0}
+.sunset{position:absolute;left:0;right:0;text-align:center;font-family:var(--disp);font-size:7.5px;
+  letter-spacing:.04em;transform:translateY(-4px);opacity:.85}
+.sunset i{display:block;font-style:normal;font-size:11px;line-height:1}
+
+.blk{position:absolute;left:2px;right:4px;border-radius:6px;padding:4px 5px 3px;overflow:hidden;
+  text-align:left;display:block;color:#0C0A14;line-height:1.08}
+.blk .nm{font-family:var(--disp);font-size:10.5px;text-transform:uppercase;letter-spacing:-.005em;
+  word-break:break-word;display:block}
+.blk .b2b{font-family:var(--ui);font-weight:800;font-size:8px;letter-spacing:.04em;opacity:.75;display:block;margin-top:1px}
+.blk .tm{font-family:var(--mono);font-size:7.5px;margin-top:2px;opacity:.7;display:block;white-space:nowrap}
+.blk.ink{color:#F4F2EE}
+.blk.dash{border:1.5px dashed rgba(12,10,20,.5)}
+.blk.mine{outline:3px solid var(--ink);outline-offset:-1px;z-index:6}
+.blk.rec{outline:2px dotted var(--ink);outline-offset:-1px;z-index:5}
+.star{position:absolute;top:2px;right:3px;font-size:9px;line-height:1}
+.crew{position:absolute;bottom:2px;right:3px;display:flex;gap:1px}
+.crew i{width:9px;height:9px;border-radius:50%;border:1.2px solid rgba(0,0,0,.45);display:block}
+.crew b{font-family:var(--ui);font-size:7.5px;font-weight:800;padding-left:1px;line-height:9px}
+.cl{position:absolute;left:1px;top:2px;bottom:2px;width:3px;background:#E3112A;border-radius:2px}
+.fade .blk:not(.on){opacity:.14;filter:grayscale(1)}
+
+/* ---- panels ---- */
+.panel{position:relative;z-index:2;background:var(--ground);border-top:3px solid var(--ink);padding:14px 16px 46px}
+.panel h2{font-family:var(--disp);font-size:17px;letter-spacing:.01em;text-transform:uppercase;margin:22px 0 9px}
+.panel h2:first-child{margin-top:0}
+.tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+.tools button{border:2.5px solid var(--ink);border-radius:7px;padding:9px 13px;font-weight:800;font-size:13px;background:var(--rail)}
+.card{background:var(--rail);border:2.5px solid var(--ink);border-radius:9px;padding:11px 12px;margin-bottom:9px}
+.card.warn{border-color:#C1101F}
+.card .t1{font-family:var(--disp);font-size:15px;text-transform:uppercase;letter-spacing:.01em}
+.card .t2{font-size:12.5px;font-family:var(--mono);opacity:.72;margin-top:3px}
+.card .t3{font-size:13px;margin-top:7px;line-height:1.45}
+.row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rule);align-items:flex-start}
+.row b{font-family:var(--mono);font-size:12px;min-width:58px;font-weight:500}
+.row .s{font-weight:700;font-size:13.5px}
+.row .s small{display:block;font-weight:500;opacity:.65;font-size:11.5px;font-family:var(--mono)}
+.person{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.person img{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);flex:0 0 26px}
+.person .pn{font-weight:700;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person .pc{font-family:var(--mono);font-size:12px;opacity:.7}
+.person button{border:2px solid var(--ink);border-radius:6px;padding:4px 9px;font-size:11.5px;font-weight:800}
+.person button[aria-pressed="true"]{background:var(--ink);color:var(--rail)}
+.fld{width:100%;margin-top:5px;border:2px solid var(--ink);border-radius:7px;padding:9px 10px;
+  font-family:var(--mono);font-size:13px;background:#fff;color:#0C0A14}
+body.night .fld{background:#0B0E14;color:var(--ink)}
+.fine{font-size:12px;opacity:.72;line-height:1.5;margin-top:12px}
+
+/* ---- detail sheet ---- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:55;opacity:0;pointer-events:none;transition:opacity .18s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--rail);color:var(--ink);
+  border-top:3px solid var(--ink);border-radius:15px 15px 0 0;
+  padding:16px 16px calc(26px + env(safe-area-inset-bottom,0px));
+  transform:translateY(103%);transition:transform .2s;max-height:76vh;overflow:auto}
+.sheet.on{transform:none}
+.sheet h3{font-family:var(--disp);font-size:22px;text-transform:uppercase;margin:0;letter-spacing:.005em;line-height:1.08}
+.sheet .meta{font-family:var(--mono);font-size:12.5px;opacity:.72;margin-top:5px}
+.sheet p{font-size:14px;line-height:1.5;margin:11px 0 0}
+.sheet .warnline{color:#C1101F;font-weight:700}
+.acts{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}
+.acts button{border:2.5px solid var(--ink);border-radius:8px;padding:10px 15px;font-weight:800;font-size:14px}
+.acts button.fill{background:var(--ink);color:var(--rail)}
+.goin{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.goin span{display:flex;align-items:center;gap:5px;border:2px solid var(--ink);border-radius:20px;padding:3px 9px 3px 3px;font-size:12px;font-weight:700}
+.goin img{width:19px;height:19px;border-radius:50%}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--rail);
+  padding:10px 18px;border-radius:40px;font-weight:800;font-size:13px;z-index:70;opacity:0;pointer-events:none;transition:opacity .18s}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* --- shared-board additions on top of the poster styles --- */
+html,body{overflow-x:hidden}
+#setup{margin:12px 16px 0}
+#setup .card{border-color:#C1101F}
+#setup code{font-family:var(--mono);font-size:12px;background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;
+  word-break:break-all;display:inline-block}
+body.night #setup code{background:rgba(255,255,255,.1)}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);flex:0 0 12px;display:inline-block}
+.person .dot{width:20px;height:20px;flex:0 0 20px}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3FD07A;margin-right:5px;vertical-align:1px}
+.live.off{background:#F0860B}
+.goin span{padding-left:8px}
+.fine b{font-weight:700}
+
+</style>
+</head>
+<body>
+<div id="glow"></div><div id="grain"></div>
+
+<div id="page">
+  <div class="mast">
+    <div class="mastrow">
+      <svg class="tri" viewBox="0 0 34 30" aria-hidden="true"><path d="M17 1 33 29H1Z" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 13v8M17 11v10M22 13v8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <div class="daytag"><span class="d1" id="dayBig">FRIDAY</span><span class="d2" id="dayDate">OCTOBER 16</span></div>
+      <div class="clock" aria-hidden="true"><span></span></div>
+      <svg class="trace" viewBox="0 0 240 22" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 6h60l7 7h52M0 15h40l8-7h26M130 13h40l6 6h64M119 6h121" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="119" cy="6" r="2.6" fill="currentColor"/><circle cx="176" cy="19" r="2.6" fill="currentColor"/>
+        <rect x="74" y="1.5" width="6" height="6" fill="currentColor"/><rect x="200" y="2.5" width="5" height="5" fill="currentColor"/>
+      </svg>
+      <span class="yr">2026</span>
+      <span class="logo">III POINTS</span>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="seg" id="dayseg">
+      <button data-day="fri" aria-pressed="true">FRI</button>
+      <button data-day="sat" aria-pressed="false">SAT</button>
+    </div>
+    <button class="tg" id="fMine" aria-pressed="false">Mine</button>
+    <button class="tg" id="fCrew" aria-pressed="false">Crew</button>
+    <span class="grow"></span>
+    <button class="tg" id="fNight" aria-pressed="false">Night</button>
+    <div class="who" id="who">Loading the board…</div>
+  </div>
+
+  <div id="setup" hidden></div>
+
+  <div id="scroll"><div id="grid"></div></div>
+
+  <div class="panel">
+    <div class="tools">
+      <button data-act="share">Copy the board link</button>
+      <button data-act="copy">Copy my night</button>
+    </div>
+    <h2 id="runhd">Friday running order</h2>
+    <div id="run"></div>
+    <h2>Clashes</h2>
+    <div id="clash"></div>
+    <h2>Who's on this board</h2>
+    <div class="card">
+      <div class="t1">Your name</div>
+      <div class="t2" style="margin-top:2px">This is how you show up to everyone else.</div>
+      <input id="nameIn" class="fld" maxlength="24" placeholder="e.g. Winston" autocapitalize="words" autocorrect="off" spellcheck="false">
+      <div class="tools" style="margin:10px 0 0"><button id="leaveBtn">Remove me from the board</button></div>
+    </div>
+    <div id="crew"></div>
+    <div class="fine" id="fine"></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== stage identity, in poster column order ===== */
+const ST={
+ "Mind Melt":["#F2A4C6",0],"Sector 3":["#8CC2EE",0],"Isotropic":["#E2DD61",0],"RC95":["#EF8F3A",0],
+ "444":["#17171A",1],"S3QUENC3":["#B6E248",0],"Grand Central":["#F6CDA6",0],
+ "Vertex":["#ED5A6D",0],"Door IV":["#6DA6DE",0],"Halo 88":["#ADC2D2",0],
+ "Red Bull Unforeseen":["#F0B604",0],"III Points Radio":["#D4E698",0],"Players Club":["#E6A6CE",0]};
+const ORDER=Object.keys(ST);
+const GAPAFTER="Grand Central";
+
+function T(s){const m=s.match(/^(\d{1,2}):(\d{2})(am|pm)$/);let h=+m[1];const mi=+m[2];
+ if(m[3]==="pm"&&h<12)h+=12; if(m[3]==="am"&&h===12)h=0; if(h<16)h+=24; return (h-16)*60+mi;}
+function fmt(t){const tot=t+960,h24=Math.floor(tot/60)%24,m=tot%60;
+ const ap=h24>=12?"PM":"AM";let h=h24%12;if(!h)h=12;return h+":"+String(m).padStart(2,"0")+" "+ap;}
+function sh(t){return fmt(t).replace(" ","").toLowerCase();}
+
+/* ===== schedule, transcribed from the two official posters ===== */
+const FRI=[
+["Mind Melt","Ackdaddy","4:00pm","5:00pm"],["Mind Melt","Vania Junco","5:05pm","5:35pm"],
+["Mind Melt","Connan Mockasin","6:00pm","7:00pm"],["Mind Melt","Men I Trust","7:25pm","8:15pm"],
+["Mind Melt","Parcels","8:45pm","10:00pm"],["Mind Melt","Tokischa","10:30pm","11:15pm"],
+["Mind Melt","Cloonee","11:30pm","1:00am"],["Mind Melt","Beltran","1:00am","2:30am","B2B Ben Sterling"],
+["Mind Melt","PAWSA","2:30am","4:00am"],
+["Sector 3","Kumi","4:00pm","5:00pm"],["Sector 3","Cumbiamba","5:05pm","5:45pm"],
+["Sector 3","Amar","6:10pm","6:40pm"],["Sector 3","Ghostface Killah","7:00pm","7:55pm","Supreme Clientele"],
+["Sector 3","Bone Thugs-N-Harmony","8:15pm","9:00pm"],["Sector 3","Lil' Kim","9:15pm","10:00pm"],
+["Sector 3","Mind Enterprises","10:20pm","11:10pm"],["Sector 3","Purity Ring","11:35pm","12:25am"],
+["Sector 3","Danny Brown","12:45am","1:30am"],["Sector 3","Jane Remover","1:50am","2:35am"],
+["Sector 3","Flying Lotus","3:00am","4:00am"],
+["Isotropic","Fiin","4:00pm","5:15pm"],["Isotropic","Daizy","5:15pm","6:30pm"],
+["Isotropic","Maher Daniel","6:30pm","8:00pm","B2B Mai Iachetti"],
+["Isotropic","Malóne Morez","8:00pm","9:30pm","B2B Miluhska"],
+["Isotropic","Miguelle & Tons","9:30pm","11:00pm","B2B Saraga"],
+["Isotropic","Brunello","11:00pm","12:30am","B2B Rafael"],
+["Isotropic","Ahmed Spins","12:30am","2:00am","B2B OMRI."],
+["Isotropic","Vintage Culture","2:00am","4:00am","B2B Max Styler"],
+["RC95","Mason Norris","4:00pm","5:15pm","B2B Mia Vendetta"],
+["RC95","Proletar","5:15pm","6:15pm","B2B Zamurai"],["RC95","V1FRO","6:15pm","7:15pm"],
+["RC95","ITBSP","7:15pm","8:15pm"],["RC95","Jigitz","8:15pm","9:15pm"],
+["RC95","Mary Droppinz","9:15pm","10:15pm"],["RC95","Ivy Lab","10:15pm","11:15pm"],
+["RC95","Hamdi","11:15pm","12:15am"],["RC95","Levity","12:15am","1:30am","B2B Taiki Nulight"],
+["RC95","Odd Mob","1:30am","2:45am"],["RC95","Disco Lines","2:45am","4:00am"],
+["444","Heidi Lawden","4:00pm","8:00pm"],["444","DJ Harvey","8:00pm","12:00am"],["444","Floating Points","12:00am","4:00am"],
+["S3QUENC3","duun","4:00pm","6:00pm","B2B Sleepy C"],["S3QUENC3","R/V Calypso","6:00pm","7:15pm"],
+["S3QUENC3","Jump Source","7:15pm","8:45pm","live"],["S3QUENC3","Jacques Greene","8:45pm","10:00pm"],
+["S3QUENC3","Eli Escobar","10:00pm","11:30pm","B2B Jubilee"],
+["S3QUENC3","Danny Daze","11:30pm","1:00am","B2B DJ Godfather"],
+["S3QUENC3","Shanti Celeste","1:00am","2:30am","B2B Peach"],["S3QUENC3","Honey Dijon","2:30am","4:00am"],
+["Grand Central","Lylac","4:30pm","5:00pm"],["Grand Central","IIRY?","5:25pm","5:55pm"],
+["Grand Central","Blind Fish","6:15pm","7:00pm"],["Grand Central","Nicholas G. Padilla","7:15pm","8:00pm"],
+["Grand Central","Rental Snakes","8:15pm","9:00pm"],["Grand Central","Corridos Ketamina","9:15pm","9:55pm"],
+["Grand Central","Patch +","10:10pm","10:55pm"],["Grand Central","Nate Sib","11:15pm","12:00am"],
+["Grand Central","Boygirl","12:20am","12:50am"],["Grand Central","MGNA Crrrta","1:10am","1:55am"],
+["Grand Central","ZEP","2:15am","3:00am"],
+["Vertex","Megusta","4:00pm","5:30pm","B2B MIGS"],["Vertex","Grace Arribas","5:30pm","7:00pm","B2B MARTE"],
+["Vertex","Rello","7:00pm","8:15pm"],["Vertex","Dan Molinari","8:15pm","9:30pm"],
+["Vertex","Slugg","9:30pm","11:00pm","B2B Raje"],["Vertex","Roddy Lima","11:00pm","12:15am"],
+["Vertex","Discip","12:15am","1:30am"],["Vertex","Ragie Ban","1:30am","2:45am"],["Vertex","INVT","2:45am","4:00am","live"],
+["Door IV","Feph","4:00pm","6:00pm","B2B Mr. Tron"],["Door IV","Adam At The Door","6:00pm","7:15pm"],
+["Door IV","Uchi","7:15pm","8:30pm"],["Door IV","Julia Saturno","8:30pm","10:00pm","B2B Lotusoph"],
+["Door IV","Gio Elia","10:00pm","11:30pm","B2B Meghan Lee"],["Door IV","Bill Patrick","11:30pm","1:00am","B2B Bort"],
+["Door IV","oma totem","1:00am","2:45am","B2B True Vine"],["Door IV","eco-sistema","2:45am","4:00am"],
+["Halo 88","Aphex Twink","4:00pm","5:30pm","B2B FORESEER"],["Halo 88","DJ Sabi","5:30pm","7:00pm","B2B GRUE5OME"],
+["Halo 88","ALEJO","7:00pm","8:00pm"],["Halo 88","Miguel Clark","8:00pm","9:15pm","B2B Naim Zarzour"],
+["Halo 88","FIUZA","9:15pm","10:30pm","B2B Madison Kay"],["Halo 88","Elias Garcia","10:30pm","12:00am","B2B Mila Gama"],
+["Halo 88","Dr. Rubinstein","12:00am","1:30am","B2B Ultrathem"],
+["Halo 88","Joanna Kuchta","1:30am","3:00am","B2B Robyn Sin Love"],["Halo 88","Tech G1rls","3:00am","4:00am"],
+["Red Bull Unforeseen","Katie Ox","4:00pm","6:00pm","B2B Nat Siriani"],
+["Red Bull Unforeseen","Thunderpony","6:00pm","7:30pm","B2B Tiffy Vera"],
+["Red Bull Unforeseen","Aabel","7:30pm","9:00pm","B2B Siegel"],
+["Red Bull Unforeseen","Maccabiii","9:00pm","10:30pm","B2B Pezlo MD"],
+["Red Bull Unforeseen","Moscoman","10:30pm","11:45pm"],
+["Red Bull Unforeseen","eveava","11:45pm","1:15am","B2B Jovigibs"],
+["Red Bull Unforeseen","Bakke","1:15am","2:30am"],
+["Red Bull Unforeseen","Lousy Lover","2:30am","4:00am","B2B Lucaz"],
+["III Points Radio","Sportswax","4:00pm","6:00pm"],["III Points Radio","Extra Andrew","6:00pm","7:30pm","B2B Mutant Pete"],
+["III Points Radio","Nicole Gallamini","7:30pm","9:00pm","B2B Nikita Green"],
+["III Points Radio","Inbal","9:00pm","10:30pm","B2B Rimaye"],["III Points Radio","Will Renuart","10:30pm","11:45pm"],
+["III Points Radio","Taimur","11:45pm","1:15am","B2B Will Buck"],["III Points Radio","Godisound","1:15am","2:30am"],
+["III Points Radio","Alexx in Chainss","2:30am","4:00am","B2B Soltek"],
+["Players Club","Scotty Sobek","4:00pm","5:30pm"],["Players Club","Lauren Palma","5:30pm","6:45pm"],
+["Players Club","Lagrimas de Oro","6:45pm","8:00pm"],["Players Club","Deep Cleansing","8:00pm","9:15pm"],
+["Players Club","Baby Jesus","9:15pm","10:45pm","B2B CHAOS!"],["Players Club","Puma","10:45pm","12:00am"],
+["Players Club","Cami di Marzo","12:00am","1:15am"],["Players Club","Dude Skywalker","1:15am","2:45am"],
+["Players Club","Differ","2:45am","4:00am"]
+];
+const SAT=[
+["Mind Melt","Carter Jackson Brown","4:00pm","5:00pm"],["Mind Melt","Loukeman","5:15pm","6:05pm"],
+["Mind Melt","ear","6:20pm","7:00pm"],["Mind Melt","Nettspend","7:25pm","8:10pm"],
+["Mind Melt","Blood Orange","8:40pm","9:50pm"],["Mind Melt","Adam Port","10:15pm","11:30pm"],
+["Mind Melt","Underworld","12:00am","1:00am","live"],["Mind Melt","Four Tet","1:30am","2:45am"],
+["Mind Melt","KETTAMA","2:45am","4:00am"],
+["Sector 3","Nikole","4:15pm","4:45pm"],["Sector 3","doris dana","5:00pm","5:30pm","live"],
+["Sector 3","res_","5:45pm","6:30pm","live"],["Sector 3","ML Buch","6:45pm","7:30pm"],
+["Sector 3","Tricky","7:55pm","8:45pm"],["Sector 3","rusowsky","9:10pm","9:55pm"],
+["Sector 3","Kelela","10:20pm","11:05pm"],["Sector 3","horsegiirL","11:30pm","12:20am"],
+["Sector 3","Bassvictim","12:40am","1:25am"],["Sector 3","Machine Girl","1:45am","2:35am","live"],
+["Sector 3","Sunn O)))","3:00am","4:00am","live"],
+["Isotropic","La BB","4:00pm","5:15pm"],["Isotropic","Godblessjai","5:15pm","6:30pm"],
+["Isotropic","Silvie Loto","6:30pm","8:00pm","B2B Ms. Mada"],["Isotropic","Marsolo","8:00pm","9:15pm"],
+["Isotropic","Omar+","9:15pm","10:30pm"],["Isotropic","ChaseWest","10:30pm","11:45pm"],
+["Isotropic","Sosa","11:45pm","1:00am"],["Isotropic","Max Dean","1:00am","2:30am","B2B Luke Dean"],
+["Isotropic","Marco Carola","2:30am","4:00am","B2B Franky Rizardo"],
+["RC95","DomnRob","4:00pm","5:00pm"],["RC95","Generous B","5:00pm","6:15pm","B2B Hakuna"],
+["RC95","Cole Knight","6:15pm","7:30pm","B2B DREYA V"],
+["RC95","Coffintexts","7:30pm","8:45pm","B2B DJ Fuckoff"],["RC95","Nick León","8:45pm","10:00pm"],
+["RC95","KI/KI","10:00pm","11:15pm"],["RC95","¥ØU$UK€ ¥UKIMAT$U","11:15pm","12:30am"],
+["RC95","VTSS","12:30am","1:30am"],["RC95","999999999","1:30am","2:45am","live"],
+["RC95","Charlotte de Witte","2:45am","4:00am"],
+["444","Willikens & Ivkovic","4:00pm","8:00pm"],["444","Red Axes","8:00pm","12:00am"],["444","Seth Troxler","12:00am","4:00am"],
+["S3QUENC3","Grant Sabadash","4:00pm","5:45pm","B2B Shir Miya"],
+["S3QUENC3","Natalia Roth","5:45pm","7:15pm","B2B Max Stern"],["S3QUENC3","Rebolledo","7:15pm","8:30pm"],
+["S3QUENC3","Whitesquare","8:30pm","9:45pm"],["S3QUENC3","Roman Flügel","9:45pm","11:00pm"],
+["S3QUENC3","Daphni","11:00pm","12:15am"],["S3QUENC3","Interplanetary Criminal","12:15am","1:30am"],
+["S3QUENC3","HAAi","1:30am","2:45am"],["S3QUENC3","Tiga","2:45am","4:00am"],
+["Grand Central","Huracán","4:15pm","4:45pm"],["Grand Central","VVilhelm","5:10pm","5:40pm"],
+["Grand Central","Camp Blu","6:05pm","6:35pm"],["Grand Central","Homicide Jenny","7:00pm","7:30pm"],
+["Grand Central","LADYBOY","7:55pm","8:25pm"],["Grand Central","Emily Afre","8:50pm","9:20pm"],
+["Grand Central","Fine","9:45pm","10:30pm"],["Grand Central","Chanel Beads","10:55pm","11:40pm"],
+["Grand Central","Velora","12:05am","12:35am"],["Grand Central","YHWH Nailgun","1:00am","1:45am","live"],
+["Grand Central","Crespi Drum Syndicate","2:00am","3:00am","live"],
+["Vertex","Allnightkev","4:00pm","5:30pm","B2B Lo-G"],["Vertex","Alezsandro","5:30pm","7:00pm","B2B Dalva"],
+["Vertex","Idriss D","7:00pm","8:30pm","B2B Danyelino"],["Vertex","Joss Dean","8:30pm","9:45pm"],
+["Vertex","KinAhau","9:45pm","11:00pm"],["Vertex","Dean Turnley","11:00pm","12:15am"],
+["Vertex","Sam Alfred","12:15am","1:30am"],["Vertex","MPH","1:30am","2:45am"],["Vertex","2UP!","2:45am","4:00am"],
+["Door IV","vsyana","4:00pm","5:15pm"],["Door IV","serafitz","5:15pm","6:45pm","B2B SOL Discos"],
+["Door IV","DJ Ray","6:45pm","8:15pm","B2B EZ Dee"],["Door IV","Mystic Bill","8:15pm","9:45pm","B2B Artime"],
+["Door IV","David Vunk","9:45pm","11:45pm"],["Door IV","Terence Tabeau","11:45pm","1:00am"],
+["Door IV","DJ Three","1:00am","2:30am","B2B Sister System"],
+["Door IV","Ashley Venom","2:30am","4:00am","B2B Souls Departed"],
+["Halo 88","Khami","4:00pm","5:00pm"],["Halo 88","Dennis Baker","5:00pm","6:00pm","B2B D. Luxe"],
+["Halo 88","Bricolage","6:00pm","7:15pm","B2B DAY/DEM"],["Halo 88","Lupreme","7:15pm","8:30pm","B2B SANTO"],
+["Halo 88","Bonita Applebumz","8:30pm","9:45pm","B2B Toni Shardai"],
+["Halo 88","PLAYSHADO","9:45pm","11:00pm","B2B SEL.6"],["Halo 88","Mr. Bitch","11:00pm","12:00am"],
+["Halo 88","Berrakka","12:00am","1:15am","B2B Pressure Point"],["Halo 88","Faith Leazae","1:15am","1:45am"],
+["Halo 88","Lady Narcisse","1:45am","3:00am","B2B Racci"],["Halo 88","Duality","3:00am","4:00am","B2B GumtheWrapper"],
+["Red Bull Unforeseen","P1no","4:00pm","5:30pm","B2B Trippie Hippie"],
+["Red Bull Unforeseen","Bozito","5:30pm","6:45pm","B2B Gabo Escalona"],
+["Red Bull Unforeseen","Spice Crime","6:45pm","8:00pm","B2B Violeta"],
+["Red Bull Unforeseen","Ale Acosta","8:00pm","9:15pm","B2B Hazón"],
+["Red Bull Unforeseen","JINN_PR","9:15pm","10:15pm"],["Red Bull Unforeseen","619!","10:15pm","11:30pm"],
+["Red Bull Unforeseen","1-800-305","11:30pm","12:45am"],
+["Red Bull Unforeseen","SATURNSARii","12:45am","2:15am","B2B SUZ"],
+["Red Bull Unforeseen","Liquid Dinosaurs","2:15am","2:45am"],["Red Bull Unforeseen","Kujo","2:45am","4:00am","B2B RARA"],
+["III Points Radio","NXTEL","4:00pm","5:00pm"],["III Points Radio","Shinobi","5:00pm","6:00pm"],
+["III Points Radio","Jinks","6:00pm","7:30pm","B2B Romulo Del Castillo"],
+["III Points Radio","Milo Ziro","7:30pm","9:00pm","B2B Xilla"],
+["III Points Radio","Marie Qrie","9:00pm","10:30pm","B2B Viva Vidal"],
+["III Points Radio","Rude Boy","10:30pm","12:00am","B2B SDRV"],
+["III Points Radio","phiphi","12:00am","1:30am","B2B Winter Wrong"],
+["III Points Radio","Lizzie_mcguire","1:30am","2:30am"],["III Points Radio","Mango","2:30am","4:00am","B2B Mister Lo"],
+["Players Club","DJ Ahamed","4:00pm","5:30pm"],["Players Club","JBZ","5:30pm","6:30pm"],
+["Players Club","Villu","6:30pm","7:45pm"],["Players Club","Canela","7:45pm","8:45pm"],
+["Players Club","Ellynora","8:45pm","10:00pm"],["Players Club","Saint & Romero","10:00pm","11:00pm","hybrid"],
+["Players Club","Jeremy Ismael","11:00pm","12:15am"],["Players Club","Jason Rault","12:15am","1:30am"],
+["Players Club","Nii Tei","1:30am","2:45am"],["Players Club","Monoky","2:45am","4:00am"]
+];
+const DATA={fri:FRI,sat:SAT};
+
+/* my picks, with the reason */
+const REC={
+"fri|Jacques Greene":"Garage-inflected house with real weight, in the Interplanetary Criminal lineage. He has played every single III Points, so he knows this site.",
+"fri|Eli Escobar":"Jubilee's whole catalog is Miami bass and breaks. Closest thing on the bill to the Chris Lorenzo breakbeat side, played as a hometown set.",
+"fri|Danny Daze":"Miami electro meets the Detroit ghettotech originator. 145 to 160, relentless, bouncy. Hits the same nerve bassline does.",
+"fri|INVT":"Miami duo, live hardware, dub-heavy and bass-forward. Buried at 2:45am on Vertex and most people will never find it.",
+"sat|Coffintexts":"DJ Fuckoff plays fast trancey bouncing techno with donk in it, which is Funk Tribu's bounce routed through Berlin. Early slot, easy to miss.",
+"sat|Nick León":"Dembow and reggaeton skeletons at techno tempo. Hometown-specific, and it feeds straight into KI/KI on the same stage.",
+"sat|Red Axes":"Post-punk instincts run through a club set, which is your Boy Harsher overlap. Four hours, so you can dip in and out.",
+"sat|Bassvictim":"Bratty New York club-pop with Bikini Kill and Le Tigre attitude in a rave costume. 45 minutes, fast, funny.",
+"sat|YHWH Nailgun":"Abrasive noise rock. Nearest thing on this bill to Lambrini Girls or IDLES in temperament.",
+"sat|Machine Girl":"Live breakcore with actual punk-show physicality. The only thing here that gives you the Turnstile release, and far better live than on record.",
+"sat|HAAi":"Breaks and psych-leaning techno. High energy without being generic peak-time.",
+"sat|KETTAMA":"If you take one thing off my list, take this. G-Town bounce, 135 to 140, hard kicks with garage and trance edges, and it closes the festival.",
+"sat|Tiga":"The Le Tigre era attitude, except he plays proper hard techno now instead of trading on nostalgia."};
+
+const NOTE={
+"fri|Vintage Culture":"Styler is the reason to stand there. Vintage Culture solo is commercially soft, so this lands better than a Vintage Culture set and worse than a Styler set.",
+"fri|Odd Mob":"Bouncy Australian house sitting between Chris Lake's groove and KETTAMA's hardness.",
+"fri|Dr. Rubinstein":"Rubinstein plays fast acid rather than kicks-only hard techno, and she pushes the other person up rather than down. Probably the best techno hour of Friday.",
+"fri|Heidi Lawden":"Four-hour slow-burn selector set from doors. Tasteful by design, good as arrival background.",
+"fri|Adam At The Door":"Sits entirely inside Heidi Lawden's four hours.",
+"fri|Honey Dijon":"Closing S3QUENC3. She goes considerably harder late than her reputation suggests.",
+"sat|horsegiirL":"The pig-mask bit is thin. Underneath it the sets are competent bouncy house. Go for the room, not the music.",
+"sat|Underworld":"The legacy live act that still actually plays. Born Slippy in a Miami warehouse is a real moment.",
+"sat|999999999":"Hardest thing on the bill and it is not close. Live acid hardware past 150, closer to Funk Tribu than to de Witte.",
+"sat|Charlotte de Witte":"Her festival hour has gotten more melodic over the last two years. Still the right closer, just temper it against the 2021 version.",
+"sat|VTSS":"Faster and more chaotic than de Witte, and the closest this bill gets to a Sara Landry energy level."};
+
+/* ============================================================
+   Shared board. Everyone reads and writes one board on the Worker.
+   Paste your deployed Worker URL here, no trailing slash.
+   ============================================================ */
+const API = "PASTE_YOUR_WORKER_URL_HERE";
+
+/* Board name comes from the link (#board=miamiii) so one page can run many crews. */
+const BOARD = ((location.hash.match(/board=([A-Za-z0-9_-]{1,32})/) || [])[1] || "miamiii").toLowerCase();
+
+const LS="iiip26-mine", LSN="iiip26-name", LSP="iiip26-pid", LSC="iiip26-cache";
+const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C","#6B4F1D"];
+
+let day="fri", filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false;
+
+/* A person is a random id this browser keeps. No accounts, no sign in. */
+const PID=(function(){
+  try{
+    let v=localStorage.getItem(LSP);
+    if(!v){ v=Array.from(crypto.getRandomValues(new Uint8Array(10))).map(b=>b.toString(16).padStart(2,"0")).join(""); localStorage.setItem(LSP,v); }
+    return v;
+  }catch(e){ return "anon"+Math.random().toString(16).slice(2,12); }
+})();
+
+function k(d,n){return d+"|"+n;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1500);}
+function colorFor(pid){let h=0;for(let i=0;i<pid.length;i++)h=(h*31+pid.charCodeAt(i))>>>0;return PAL[h%PAL.length];}
+function others(){return people.filter(p=>p.person!==PID);}
+function crewFor(key){return others().filter(p=>p.sets.has(key));}
+function onGrid(key){
+  if(filter==="mine")return mine.has(key);
+  if(filter==="crew")return mine.has(key)||crewFor(key).length>0;
+  return true;
+}
+
+/* ===== clashes, on your own picks ===== */
+function clashes(d){
+  const rows=DATA[d].filter(r=>mine.has(k(d,r[1])));
+  const out=[];
+  for(let i=0;i<rows.length;i++)for(let j=i+1;j<rows.length;j++){
+    const A=rows[i],B=rows[j],as=T(A[2]),ae=T(A[3]),bs=T(B[2]),be=T(B[3]);
+    if(as<be&&bs<ae){const ov=Math.min(ae,be)-Math.max(as,bs);
+      out.push({a:A,b:B,ov,full:ov>=Math.min(ae-as,be-bs)-2,same:A[0]===B[0]});}
+  }
+  return out.sort((x,y)=>T(x.a[2])-T(y.a[2]));
+}
+function clashSet(d){const s=new Set();clashes(d).forEach(c=>{s.add(c.a[1]);s.add(c.b[1]);});return s;}
+
+/* ===== grid ===== */
+const PPM=1.5, SPAN=720, H=SPAN*PPM;
+function railHTML(stick,side){
+  let h=`<div class="rail ${stick?"stick":""} ${side}"><div class="hd"></div><div class="track" style="height:${H}px">`;
+  for(let t=0;t<=SPAN;t+=60)h+=`<div class="tick" style="top:${t*PPM}px">${fmt(t).replace(":00","").replace(" ","")}</div>`;
+  h+=`<div class="sunset" style="top:${T("6:48pm")*PPM}px"><i>&#9728;</i>SUNSET</div></div></div>`;
+  return h;
+}
+function renderGrid(){
+  const rows=DATA[day], cs=clashSet(day);
+  let h=railHTML(true,"l");
+  ORDER.forEach(st=>{
+    const [c,dark]=ST[st];
+    h+=`<div class="col${st==="Vertex"?" gap":""}"><div class="hd"><span class="lab" style="background:${c};color:${dark?"#F4F2EE":"#0C0A14"}">${esc(st)}</span></div><div class="track" style="height:${H}px">`;
+    for(let t=0;t<=SPAN;t+=60)h+=`<div class="hr" style="top:${t*PPM}px"></div>`;
+    rows.filter(r=>r[0]===st).forEach(r=>{
+      const key=k(day,r[1]), s=T(r[2]), e=T(r[3]);
+      const isMine=mine.has(key), isRec=!!REC[key], cw=crewFor(key);
+      const cls=["blk"];
+      if(dark)cls.push("ink");
+      if(st==="Grand Central")cls.push("dash");
+      if(isMine)cls.push("mine"); else if(isRec)cls.push("rec");
+      if(onGrid(key))cls.push("on");
+      h+=`<button class="${cls.join(" ")}" data-n="${esc(r[1])}" style="background:${st==="Grand Central"?"rgba(246,205,166,.75)":c};top:${s*PPM}px;height:${(e-s)*PPM-3}px">`;
+      if(cs.has(r[1]))h+=`<span class="cl"></span>`;
+      if(isMine)h+=`<span class="star">&#9733;</span>`;
+      h+=`<span class="nm">${esc(r[1])}</span>`;
+      if(r[4])h+=`<span class="b2b">${esc(r[4])}</span>`;
+      h+=`<span class="tm">${sh(s)}&ndash;${sh(e)}</span>`;
+      if(cw.length){
+        h+=`<span class="crew">`;
+        cw.slice(0,3).forEach(p=>{h+=`<i style="background:${colorFor(p.person)}"></i>`;});
+        if(cw.length>3)h+=`<b>+${cw.length-3}</b>`;
+        h+=`</span>`;
+      }
+      h+=`</button>`;
+    });
+    h+=`</div></div>`;
+    if(st===GAPAFTER)h+=railHTML(false,"r");
+  });
+  h+=railHTML(false,"r");
+  const g=document.getElementById("grid");
+  g.innerHTML=h;
+  g.classList.toggle("fade",filter!=="all");
+}
+
+/* ===== panels ===== */
+function renderPanels(){
+  document.getElementById("runhd").textContent=(day==="fri"?"Friday":"Saturday")+" running order";
+  const rows=DATA[day].filter(r=>mine.has(k(day,r[1]))).sort((a,b)=>T(a[2])-T(b[2]));
+  const cs=clashSet(day);
+  let h="";
+  if(!rows.length)h=`<div class="card"><div class="t3">Nothing on your list for this day yet. Tap any block on the grid to add it.</div></div>`;
+  rows.forEach(r=>{
+    const cw=crewFor(k(day,r[1]));
+    h+=`<div class="row"><b>${sh(T(r[2]))}</b><span class="s">${esc(r[1])}${r[4]?" "+esc(r[4]):""}<small>${esc(r[0])}${cs.has(r[1])?" · clash":""}${cw.length?" · with "+cw.length:""}</small></span></div>`;
+  });
+  document.getElementById("run").innerHTML=h;
+
+  const cl=clashes(day);
+  let c="";
+  if(!cl.length)c=`<div class="card"><div class="t3">No overlaps on your ${day==="fri"?"Friday":"Saturday"} picks.</div></div>`;
+  cl.forEach(x=>{
+    let v;
+    if(x.same)v="Same stage, so this is a transcription error rather than a real conflict.";
+    else if(x.full)v="One sits fully inside the other. Pick one.";
+    else if(x.ov>=45)v=`${x.ov} minutes gone. Catching meaningful parts of both is not realistic.`;
+    else if(x.ov>=20)v=`${x.ov} minute overlap. Doable if you leave one early, though Mana Wynwood runs five blocks and stage-to-stage walks with crowd have been 5 to 10 minutes.`;
+    else v=`${x.ov} minutes. Shave the front or back and you keep both, assuming the stages are near each other.`;
+    c+=`<div class="card warn"><div class="t1">${esc(x.a[1])} vs ${esc(x.b[1])}</div><div class="t2">${sh(T(x.a[2]))}&ndash;${sh(T(x.a[3]))} ${esc(x.a[0])} &nbsp;/&nbsp; ${sh(T(x.b[2]))}&ndash;${sh(T(x.b[3]))} ${esc(x.b[0])}</div><div class="t3">${v}</div></div>`;
+  });
+  document.getElementById("clash").innerHTML=c;
+
+  const el=document.getElementById("crew");
+  el.textContent="";
+  if(!people.length){
+    const d=document.createElement("div");
+    d.className="card";
+    d.innerHTML=`<div class="t3">Nobody has saved picks to this board yet. Tap a few sets and you will be the first.</div>`;
+    el.appendChild(d);
+  }
+  people.slice().sort((a,b)=>b.sets.size-a.sets.size).forEach(p=>{
+    const row=document.createElement("div");
+    row.className="person";
+    const dot=document.createElement("span");
+    dot.className="dot"; dot.style.background=colorFor(p.person);
+    const nm=document.createElement("span");
+    nm.className="pn";
+    // Other people's typed names: text only, never markup.
+    nm.textContent=(p.person===PID?"You":(p.name||"Someone"));
+    const ct=document.createElement("span");
+    ct.className="pc"; ct.textContent=p.sets.size+" sets";
+    row.append(dot,nm,ct);
+    el.appendChild(row);
+  });
+
+  document.getElementById("fine").innerHTML=
+    "Board <b>"+esc(BOARD)+"</b>. Everyone on this link shares it, nobody signs in. "+
+    "Grid transcribed by hand from the two official III Points posters, so spot-check anything you are planning the night around against the festival app. "+
+    "Dotted outlines are suggestions, solid outlines are your own picks. The page keeps working with no signal once it has loaded; changes made offline save when you are back on.";
+}
+
+/* ===== detail sheet ===== */
+function openSheet(name){
+  const r=DATA[day].find(x=>x[1]===name);if(!r)return;
+  const key=k(day,name), isMine=mine.has(key);
+  const why=REC[key]||NOTE[key]||"";
+  const cl=clashes(day).filter(c=>c.a[1]===name||c.b[1]===name);
+  const cw=crewFor(key);
+  let h=`<h3>${esc(name)}${r[4]?" "+esc(r[4]):""}</h3>
+    <div class="meta">${esc(r[0])} &middot; ${fmt(T(r[2]))} &ndash; ${fmt(T(r[3]))}</div>`;
+  if(why)h+=`<p>${esc(why)}</p>`;
+  if(cl.length)h+=`<p class="warnline">Clashes with ${cl.map(c=>esc(c.a[1]===name?c.b[1]:c.a[1])).join(", ")}.</p>`;
+  h+=`<div class="acts">
+    <button class="${isMine?"":"fill"}" data-go="0">Not going</button>
+    <button class="${isMine?"fill":""}" data-go="1">On my list &#9733;</button>
+    <button data-close="1">Close</button></div><div class="goin" id="goin"></div>`;
+  const s=document.getElementById("sheet");
+  s.innerHTML=h; s.dataset.n=name;
+  s.classList.add("on"); document.getElementById("scrim").classList.add("on");
+  const box=document.getElementById("goin");
+  cw.forEach(p=>{
+    const sp=document.createElement("span");
+    const dot=document.createElement("span");
+    dot.className="dot"; dot.style.background=colorFor(p.person);
+    const t=document.createElement("em"); t.style.fontStyle="normal";
+    t.textContent=p.name||"Someone";
+    sp.append(dot,t); box.appendChild(sp);
+  });
+}
+function closeSheet(){document.getElementById("sheet").classList.remove("on");document.getElementById("scrim").classList.remove("on");}
+
+/* ===== sync ===== */
+const configured=()=>/^https?:\/\//.test(API);
+
+function cacheSave(){
+  try{
+    localStorage.setItem(LS,JSON.stringify([...mine]));
+    localStorage.setItem(LSC,JSON.stringify(people.map(p=>({person:p.person,name:p.name,sets:[...p.sets]}))));
+  }catch(e){}
+}
+function cacheLoad(){
+  try{
+    const m=JSON.parse(localStorage.getItem(LS)||"[]"); if(Array.isArray(m))mine=new Set(m);
+    const c=JSON.parse(localStorage.getItem(LSC)||"[]");
+    if(Array.isArray(c))people=c.map(p=>({person:p.person,name:p.name,sets:new Set(p.sets||[])}));
+  }catch(e){}
+  try{ myName=localStorage.getItem(LSN)||""; }catch(e){}
+}
+
+async function pull(){
+  if(!configured()||pulling)return;
+  pulling=true;
+  try{
+    const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{cache:"no-store"});
+    if(!r.ok)throw new Error("http "+r.status);
+    const j=await r.json();
+    people=(j.people||[]).map(p=>({person:p.person,name:p.name||"",sets:new Set(Array.isArray(p.sets)?p.sets:[])}));
+    online=true; cacheSave(); draw();
+  }catch(e){ online=false; statusLine(); }
+  finally{ pulling=false; }
+}
+function push(){
+  cacheSave();
+  if(!configured())return;
+  clearTimeout(pushT);
+  pushT=setTimeout(async()=>{
+    try{
+      const r=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({person:PID,name:myName,sets:[...mine]})});
+      if(!r.ok)throw new Error("http "+r.status);
+      online=true; pull();
+    }catch(e){ online=false; statusLine(); }
+  },600);
+}
+function statusLine(){
+  const n=others().length;
+  const dot=`<span class="live${online?"":" off"}"></span>`;
+  let msg;
+  if(!configured())msg="Not connected to a board yet. Picks save on this device.";
+  else if(!online)msg="Offline. Your picks save here and sync when you are back on.";
+  else msg=n?(n===1?"1 other person on this board":n+" others on this board"):"You are the first one here";
+  document.getElementById("who").innerHTML=dot+msg;
+}
+
+function toggle(name,on){
+  const key=k(day,name);
+  if(on)mine.add(key); else mine.delete(key);
+  push(); draw();
+}
+
+/* ===== export ===== */
+function myText(){
+  let o="III POINTS 2026 — Mana Wynwood\n";
+  ["fri","sat"].forEach(d=>{
+    const rows=DATA[d].filter(r=>mine.has(k(d,r[1]))).sort((a,b)=>T(a[2])-T(b[2]));
+    if(!rows.length)return;
+    const cs=clashSet(d);
+    o+="\n"+(d==="fri"?"FRIDAY OCT 16":"SATURDAY OCT 17")+"\n";
+    rows.forEach(r=>{o+=sh(T(r[2]))+"  "+r[1]+(r[4]?" "+r[4]:"")+"  ("+r[0]+")"+(cs.has(r[1])?"  [CLASH]":"")+"\n";});
+    const cl=clashes(d);
+    if(cl.length)o+="Clashes: "+cl.map(c=>c.a[1]+" / "+c.b[1]).join(" · ")+"\n";
+  });
+  return o;
+}
+async function copy(t){
+  try{ await navigator.clipboard.writeText(t); toast("Copied"); }
+  catch(e){
+    const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");toast("Copied");}catch(_){toast("Select the text to copy");}
+    ta.remove();
+  }
+}
+function boardLink(){return location.origin+location.pathname+"#board="+BOARD;}
+
+/* ===== events ===== */
+document.getElementById("grid").addEventListener("click",e=>{
+  const b=e.target.closest(".blk"); if(b)openSheet(b.dataset.n);
+});
+document.getElementById("sheet").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  if(b.dataset.close){closeSheet();return;}
+  if(b.dataset.go!==undefined){toggle(document.getElementById("sheet").dataset.n,b.dataset.go==="1");closeSheet();}
+});
+document.getElementById("scrim").addEventListener("click",closeSheet);
+document.getElementById("dayseg").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-day]"); if(!b)return;
+  day=b.dataset.day;
+  document.querySelectorAll("#dayseg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  document.body.classList.toggle("sat",day==="sat");
+  document.getElementById("dayBig").textContent=day==="fri"?"FRIDAY":"SATURDAY";
+  document.getElementById("dayDate").textContent=day==="fri"?"OCTOBER 16":"OCTOBER 17";
+  document.getElementById("scroll").scrollLeft=0; window.scrollTo(0,0); draw();
+});
+function setFilter(v){
+  filter=(filter===v)?"all":v;
+  document.getElementById("fMine").setAttribute("aria-pressed",String(filter==="mine"));
+  document.getElementById("fCrew").setAttribute("aria-pressed",String(filter==="crew"));
+  draw();
+}
+document.getElementById("fMine").addEventListener("click",()=>setFilter("mine"));
+document.getElementById("fCrew").addEventListener("click",()=>setFilter("crew"));
+document.getElementById("fNight").addEventListener("click",e=>{
+  const on=!document.body.classList.contains("night");
+  document.body.classList.toggle("night",on);
+  e.currentTarget.setAttribute("aria-pressed",String(on));
+});
+document.querySelector(".tools").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-act]"); if(!b)return;
+  if(b.dataset.act==="copy"){ if(!mine.size){toast("Nothing picked yet");return;} copy(myText()); }
+  if(b.dataset.act==="share"){ copy(boardLink()); }
+});
+document.getElementById("nameIn").addEventListener("input",e=>{
+  myName=e.target.value.slice(0,24);
+  try{localStorage.setItem(LSN,myName);}catch(_){}
+  push();
+});
+document.getElementById("leaveBtn").addEventListener("click",async()=>{
+  if(!configured())return;
+  try{
+    await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
+      headers:{"Content-Type":"application/json"},body:JSON.stringify({person:PID,leave:true})});
+    toast("Removed you from the board"); pull();
+  }catch(e){ toast("Could not reach the board"); }
+});
+window.addEventListener("hashchange",()=>location.reload());
+
+function draw(){renderGrid();renderPanels();statusLine();}
+
+/* ===== boot ===== */
+cacheLoad();
+document.getElementById("nameIn").value=myName;
+draw();
+
+if(!configured()){
+  const s=document.getElementById("setup");
+  s.hidden=false;
+  s.innerHTML=`<div class="card"><div class="t1">One setup step left</div>
+    <div class="t3">This page has no Worker URL yet, so picks stay on this device.
+    Open <code>docs/index.html</code>, find <code>const API = "PASTE_YOUR_WORKER_URL_HERE"</code>
+    near the top of the script, and replace it with your deployed Worker address.
+    The README has the three commands.</div></div>`;
+}else{
+  pull();
+  setInterval(()=>{ if(!document.hidden)pull(); },6000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden)pull(); });
+  window.addEventListener("online",()=>{ pull(); push(); });
+}
+
+</script>
+</body>
+</html>
