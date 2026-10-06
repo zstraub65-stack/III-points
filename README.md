@@ -14,3 +14,4 @@ See `CLAUDE.md` for the rules that matter when changing this, and `HANDOFF.md` f
 the current state and the plan to make it work for festivals other than III Points.
 red
 Deployed 2026-10-06
+update 2026-10-06 21:46
