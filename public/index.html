@@ -156,6 +156,8 @@ body.night .fld{background:#0B0E14;color:var(--ink)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* --- shared-board additions on top of the poster styles --- */
+.qrwrap{background:#fff;padding:12px;border-radius:8px;margin:11px auto 9px;max-width:260px;border:2px solid var(--ink)}
+.qrwrap svg{display:block;width:100%;height:auto}
 html,body{overflow-x:hidden}
 #setup{margin:12px 16px 0}
 #setup .card{border-color:#C1101F}
@@ -210,6 +212,14 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <div class="tools">
       <button data-act="share">Copy the board link</button>
       <button data-act="copy">Copy my night</button>
+      <button data-act="qr">Show QR code</button>
+    </div>
+    <div id="qrBox" hidden>
+      <div class="card" style="text-align:center">
+        <div class="t1">Scan to join this board</div>
+        <div class="qrwrap"><svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR code linking to this board"><rect width="33" height="33" fill="#fff"/><g fill="#000"><rect x="2" y="2" width="7" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="14" y="2" width="5" height="1"/><rect x="21" y="2" width="1" height="1"/><rect x="24" y="2" width="7" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="11" y="3" width="1" height="1"/><rect x="14" y="3" width="4" height="1"/><rect x="24" y="3" width="1" height="1"/><rect x="30" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="3" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="11" y="4" width="4" height="1"/><rect x="17" y="4" width="4" height="1"/><rect x="22" y="4" width="1" height="1"/><rect x="24" y="4" width="1" height="1"/><rect x="26" y="4" width="3" height="1"/><rect x="30" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="4" y="5" width="3" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="12" y="5" width="2" height="1"/><rect x="16" y="5" width="3" height="1"/><rect x="20" y="5" width="3" height="1"/><rect x="24" y="5" width="1" height="1"/><rect x="26" y="5" width="3" height="1"/><rect x="30" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="4" y="6" width="3" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="11" y="6" width="8" height="1"/><rect x="20" y="6" width="1" height="1"/><rect x="24" y="6" width="1" height="1"/><rect x="26" y="6" width="3" height="1"/><rect x="30" y="6" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="10" y="7" width="2" height="1"/><rect x="15" y="7" width="1" height="1"/><rect x="17" y="7" width="1" height="1"/><rect x="21" y="7" width="1" height="1"/><rect x="24" y="7" width="1" height="1"/><rect x="30" y="7" width="1" height="1"/><rect x="2" y="8" width="7" height="1"/><rect x="10" y="8" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/><rect x="16" y="8" width="1" height="1"/><rect x="18" y="8" width="1" height="1"/><rect x="20" y="8" width="1" height="1"/><rect x="22" y="8" width="1" height="1"/><rect x="24" y="8" width="7" height="1"/><rect x="11" y="9" width="2" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="18" y="9" width="4" height="1"/><rect x="2" y="10" width="1" height="1"/><rect x="5" y="10" width="1" height="1"/><rect x="7" y="10" width="2" height="1"/><rect x="10" y="10" width="2" height="1"/><rect x="14" y="10" width="3" height="1"/><rect x="22" y="10" width="2" height="1"/><rect x="25" y="10" width="1" height="1"/><rect x="2" y="11" width="1" height="1"/><rect x="4" y="11" width="1" height="1"/><rect x="7" y="11" width="1" height="1"/><rect x="9" y="11" width="3" height="1"/><rect x="15" y="11" width="1" height="1"/><rect x="18" y="11" width="3" height="1"/><rect x="22" y="11" width="1" height="1"/><rect x="24" y="11" width="1" height="1"/><rect x="27" y="11" width="1" height="1"/><rect x="30" y="11" width="1" height="1"/><rect x="2" y="12" width="2" height="1"/><rect x="6" y="12" width="1" height="1"/><rect x="8" y="12" width="3" height="1"/><rect x="13" y="12" width="1" height="1"/><rect x="15" y="12" width="1" height="1"/><rect x="18" y="12" width="1" height="1"/><rect x="21" y="12" width="2" height="1"/><rect x="25" y="12" width="5" height="1"/><rect x="4" y="13" width="2" height="1"/><rect x="9" y="13" width="1" height="1"/><rect x="12" y="13" width="2" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="17" y="13" width="2" height="1"/><rect x="20" y="13" width="1" height="1"/><rect x="22" y="13" width="2" height="1"/><rect x="25" y="13" width="2" height="1"/><rect x="28" y="13" width="2" height="1"/><rect x="2" y="14" width="3" height="1"/><rect x="6" y="14" width="3" height="1"/><rect x="10" y="14" width="1" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="15" y="14" width="1" height="1"/><rect x="18" y="14" width="2" height="1"/><rect x="21" y="14" width="1" height="1"/><rect x="23" y="14" width="2" height="1"/><rect x="27" y="14" width="1" height="1"/><rect x="29" y="14" width="2" height="1"/><rect x="2" y="15" width="1" height="1"/><rect x="6" y="15" width="2" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="12" y="15" width="1" height="1"/><rect x="16" y="15" width="1" height="1"/><rect x="19" y="15" width="1" height="1"/><rect x="21" y="15" width="3" height="1"/><rect x="25" y="15" width="1" height="1"/><rect x="2" y="16" width="2" height="1"/><rect x="5" y="16" width="4" height="1"/><rect x="11" y="16" width="6" height="1"/><rect x="20" y="16" width="1" height="1"/><rect x="23" y="16" width="1" height="1"/><rect x="26" y="16" width="5" height="1"/><rect x="2" y="17" width="1" height="1"/><rect x="6" y="17" width="1" height="1"/><rect x="10" y="17" width="3" height="1"/><rect x="15" y="17" width="1" height="1"/><rect x="19" y="17" width="1" height="1"/><rect x="22" y="17" width="1" height="1"/><rect x="24" y="17" width="4" height="1"/><rect x="29" y="17" width="1" height="1"/><rect x="3" y="18" width="2" height="1"/><rect x="6" y="18" width="5" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="15" y="18" width="3" height="1"/><rect x="19" y="18" width="2" height="1"/><rect x="22" y="18" width="2" height="1"/><rect x="29" y="18" width="1" height="1"/><rect x="3" y="19" width="1" height="1"/><rect x="5" y="19" width="3" height="1"/><rect x="9" y="19" width="1" height="1"/><rect x="11" y="19" width="2" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="18" y="19" width="1" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="22" y="19" width="4" height="1"/><rect x="27" y="19" width="1" height="1"/><rect x="30" y="19" width="1" height="1"/><rect x="2" y="20" width="1" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="8" y="20" width="2" height="1"/><rect x="11" y="20" width="1" height="1"/><rect x="13" y="20" width="1" height="1"/><rect x="15" y="20" width="1" height="1"/><rect x="18" y="20" width="2" height="1"/><rect x="25" y="20" width="2" height="1"/><rect x="29" y="20" width="2" height="1"/><rect x="4" y="21" width="1" height="1"/><rect x="12" y="21" width="2" height="1"/><rect x="15" y="21" width="1" height="1"/><rect x="18" y="21" width="2" height="1"/><rect x="21" y="21" width="1" height="1"/><rect x="24" y="21" width="3" height="1"/><rect x="29" y="21" width="2" height="1"/><rect x="2" y="22" width="1" height="1"/><rect x="4" y="22" width="1" height="1"/><rect x="6" y="22" width="1" height="1"/><rect x="8" y="22" width="2" height="1"/><rect x="12" y="22" width="1" height="1"/><rect x="16" y="22" width="1" height="1"/><rect x="20" y="22" width="1" height="1"/><rect x="22" y="22" width="5" height="1"/><rect x="28" y="22" width="1" height="1"/><rect x="10" y="23" width="1" height="1"/><rect x="13" y="23" width="3" height="1"/><rect x="18" y="23" width="3" height="1"/><rect x="22" y="23" width="1" height="1"/><rect x="26" y="23" width="1" height="1"/><rect x="28" y="23" width="3" height="1"/><rect x="2" y="24" width="7" height="1"/><rect x="12" y="24" width="2" height="1"/><rect x="15" y="24" width="2" height="1"/><rect x="18" y="24" width="1" height="1"/><rect x="22" y="24" width="1" height="1"/><rect x="24" y="24" width="1" height="1"/><rect x="26" y="24" width="1" height="1"/><rect x="29" y="24" width="1" height="1"/><rect x="2" y="25" width="1" height="1"/><rect x="8" y="25" width="1" height="1"/><rect x="10" y="25" width="1" height="1"/><rect x="12" y="25" width="2" height="1"/><rect x="15" y="25" width="1" height="1"/><rect x="18" y="25" width="1" height="1"/><rect x="20" y="25" width="1" height="1"/><rect x="22" y="25" width="1" height="1"/><rect x="26" y="25" width="4" height="1"/><rect x="2" y="26" width="1" height="1"/><rect x="4" y="26" width="3" height="1"/><rect x="8" y="26" width="1" height="1"/><rect x="11" y="26" width="2" height="1"/><rect x="16" y="26" width="5" height="1"/><rect x="22" y="26" width="5" height="1"/><rect x="2" y="27" width="1" height="1"/><rect x="4" y="27" width="3" height="1"/><rect x="8" y="27" width="1" height="1"/><rect x="10" y="27" width="7" height="1"/><rect x="24" y="27" width="6" height="1"/><rect x="2" y="28" width="1" height="1"/><rect x="4" y="28" width="3" height="1"/><rect x="8" y="28" width="1" height="1"/><rect x="11" y="28" width="2" height="1"/><rect x="15" y="28" width="1" height="1"/><rect x="21" y="28" width="1" height="1"/><rect x="26" y="28" width="3" height="1"/><rect x="30" y="28" width="1" height="1"/><rect x="2" y="29" width="1" height="1"/><rect x="8" y="29" width="1" height="1"/><rect x="12" y="29" width="2" height="1"/><rect x="18" y="29" width="2" height="1"/><rect x="22" y="29" width="1" height="1"/><rect x="24" y="29" width="1" height="1"/><rect x="29" y="29" width="1" height="1"/><rect x="2" y="30" width="7" height="1"/><rect x="10" y="30" width="3" height="1"/><rect x="15" y="30" width="1" height="1"/><rect x="18" y="30" width="2" height="1"/><rect x="22" y="30" width="1" height="1"/><rect x="24" y="30" width="1" height="1"/><rect x="27" y="30" width="1" height="1"/><rect x="29" y="30" width="1" height="1"/></g></svg></div>
+        <div class="t2" style="word-break:break-all">iii-points.zstraub65.workers.dev</div>
+      </div>
     </div>
     <h2 id="runhd">Friday running order</h2>
     <div id="run"></div>
@@ -454,6 +464,69 @@ function onGrid(key){
   return true;
 }
 
+/* Background on acts I know. Not recommendations, just what they are. */
+const INFO={
+"fri|Beltran":"B2B with Ben Sterling. Sterling is the groovier and more restrained of the two, so expect this to sit lower-BPM than a Beltran solo set.",
+"fri|Ghostface Killah":"Wu-Tang, performing Supreme Clientele. One of the best-regarded rap albums of its era and he still performs it properly rather than as a medley.",
+"fri|Bone Thugs-N-Harmony":"Legacy set. Lands or flops depending on which members turn up and how much of it is backing track.",
+"fri|Lil' Kim":"Legacy booking. Short, hits-driven, variable delivery.",
+"fri|Danny Brown":"Live he is genuinely unhinged in a way that connects to why you like IDLES. Short and loud.",
+"fri|Connan Mockasin":"Woozy, slack psych. Deliberately unhurried. The opposite of a dancefloor set.",
+"fri|Men I Trust":"Soft dream pop. Pleasant, very low stakes, good for sitting down.",
+"fri|Purity Ring":"Synth pop, closest thing on the bill to Phantogram. Pretty rather than heavy.",
+"fri|Jane Remover":"Has shifted from hyperpop toward shoegaze and rock lately, which nudges it closer to your band taste. Still inconsistent live.",
+"fri|Flying Lotus":"Full audiovisual show. Technically impressive, low BPM, more watch than dance.",
+"fri|Parcels":"Live, full band, harmonies actually sung rather than backing-tracked. Reliably one of the better live sets anywhere they play.",
+"fri|Tokischa":"Chaotic, short, confrontational. Miami is the right crowd for her.",
+"fri|Mind Enterprises":"Live band setup, Italo and disco bones. Same room as Parcels and L'Imperatrice.",
+"fri|Hamdi":"UK bass and dubstep with sharp tempo shifts. This crowd will not be ready for them, which usually makes his sets better.",
+"fri|Levity":"B2B with Taiki Nulight. The only drum and bass shaped thing on the bill, and it leans bass-house crossover rather than rolling DnB.",
+"fri|Ivy Lab":"Sold as DnB adjacent but it is halftime and downtempo bass. Going in expecting Sub Focus will annoy you.",
+"fri|Mary Droppinz":"Crowd-reading edits selector. Fun, not deep. Good bridge between two bigger sets.",
+"fri|Cloonee":"Tech house that fits your lane on paper. Honest knock: the sets have gotten formulaic and he pulls a rough crowd.",
+"fri|PAWSA":"Competent groove-focused tech house. Nothing wrong with it, nothing that stays with you.",
+"fri|Disco Lines":"Viral edits, built for clips. There is a real DJ in there but the set is not aimed at you.",
+"fri|DJ Harvey":"Four hours around 118 BPM, disco and balearic. A legend, and genuinely not your tempo.",
+"fri|Floating Points":"Four hours. Can reach 140 hard techno by the end, but the first hour is usually slow. High variance, big commitment.",
+"fri|Shanti Celeste":"B2B with Peach. Bright, bubbly, breaks-inflected selector house. Skilled, rarely hard.",
+"fri|Ahmed Spins":"B2B with OMRI. Afro house, mid-tempo, spiritual pacing. Well made and slow.",
+"fri|Maher Daniel":"B2B with Mai Iachetti. Miami house regulars, dependable groove, below your peak-time bar.",
+"fri|Miguelle & Tons":"B2B with Saraga. Mid-tempo melodic house. Filler unless you are already in the room.",
+"fri|Brunello":"B2B with Rafael. Latin-leaning melodic house. Pleasant, not hard.",
+"fri|Moscoman":"Disco Halal boss. Post-punk instincts in dance music, groovy but mid-tempo.",
+"fri|Bill Patrick":"B2B with Bort. Veteran selectors, long-form and slow-building. Not your tempo.",
+"fri|Maccabiii":"B2B with Pezlo MD. Maccabi House is Adam Ten's crew, so this is the nearest thing to Adam Ten inside the gates.",
+"fri|Taimur":"B2B with Will Buck, both Space residents. They build a room over hours, which suits a club better than a festival slot.",
+"fri|Corridos Ketamina":"Latin club deconstruction. Unpredictable, occasionally excellent, occasionally unlistenable.",
+
+"sat|Blood Orange":"Dev Hynes. Beautiful and slow. Only for you if the quieter TV on the Radio material is what you actually revisit.",
+"sat|Nettspend":"Young rage-rap. Short, loud, chaotic crowd. More about the room than the music.",
+"sat|Tricky":"Live and confrontational, plays very dark and very loud. Nowhere near dance music.",
+"sat|Kelela":"Excellent R&B, and entirely outside your list.",
+"sat|ML Buch":"Quiet, diffuse ambient guitar pop.",
+"sat|rusowsky":"Melodic Spanish alt-pop. Not your world.",
+"sat|Chanel Beads":"Fragmented experimental indie. Shares nothing with your rock list.",
+"sat|Sunn O)))":"Drone metal. The loudest thing at the festival and the least groove-driven music ever made. You said you want a system that hurts, and this is that with no rhythm at all.",
+"sat|Adam Port":"Keinemusik. Big, well built, glacial buildups. The tasteful sunset set you said you would rather skip, executed well.",
+"sat|Four Tet":"Brilliant and unpredictable. Also often euphoric-ambient rather than hard. Coin flip on which set you get.",
+"sat|Daphni":"Caribou's dance alias. Loose, weird, groove-first. Better than his Four Tet-adjacent peers at this, less consistent.",
+"sat|Roman Flügel":"Veteran selector who plays proper electro and acid. Would be a sleeper if he were not likely to get a quiet room.",
+"sat|Whitesquare":"Competent, unremarkable melodic techno. Filler.",
+"sat|Rebolledo":"Cosmic, slow, hypnotic. Not physical.",
+"sat|Willikens & Ivkovic":"Deliberately slow cosmic four-hour set. The precise opposite of what you asked for.",
+"sat|Seth Troxler":"Four hours, historically variable, sometimes self-indulgent. A long wait for a payoff that may not come.",
+"sat|Marco Carola":"B2B with Franky Rizardo. Long-form, low-variance, deliberately monotonous. Some find it hypnotic, you will probably find it flat.",
+"sat|David Vunk":"Raw Italo and electro. Weird enough to be interesting, mid-tempo enough to drop if something harder clashes.",
+"sat|Mystic Bill":"B2B with Artime. Mystic Bill is a real Chicago house and acid veteran. Traditionalist and warm, not hard.",
+"sat|Jinks":"B2B with Romulo Del Castillo, a genuine Miami electro veteran from the Schematic Records era. Historically interesting, likely a quiet room.",
+"sat|DJ Three":"B2B with Sister System. Deep and progressive, more headphones than dancefloor.",
+"sat|Silvie Loto":"B2B with Ms. Mada. Both Miami regulars in the Space network. Solid if the timing works.",
+"sat|KI/KI":"Trance-inflected hard groove. The one act here that touches your trance interest at all.",
+"sat|Interplanetary Criminal":"Bassline and UK garage. Him and Hamdi on one bill is the strongest argument that this festival is in your lane.",
+"sat|MPH":"Genuine bassline rather than the bass-house version of it. Expect one of the sweatiest rooms on site.",
+"sat|Crespi Drum Syndicate":"Live drum ensemble. No idea how it translates to this setting, but it is the only thing like it on the bill."
+};
+
 /* ===== clashes, on your own picks ===== */
 function clashes(d){
   const rows=DATA[d].filter(r=>mine.has(k(d,r[1])));
@@ -484,15 +557,15 @@ function renderGrid(){
     for(let t=0;t<=SPAN;t+=60)h+=`<div class="hr" style="top:${t*PPM}px"></div>`;
     rows.filter(r=>r[0]===st).forEach(r=>{
       const key=k(day,r[1]), s=T(r[2]), e=T(r[3]);
-      const isMine=mine.has(key), isRec=!!REC[key], cw=crewFor(key);
+      const isMine=mine.has(key), isRec=!!REC[key], hasNote=!!(REC[key]||NOTE[key]||INFO[key]), cw=crewFor(key);
       const cls=["blk"];
       if(dark)cls.push("ink");
       if(st==="Grand Central")cls.push("dash");
-      if(isMine)cls.push("mine"); else if(isRec)cls.push("rec");
+      if(isMine)cls.push("mine"); else if(hasNote)cls.push("rec");
       if(onGrid(key))cls.push("on");
       h+=`<button class="${cls.join(" ")}" data-n="${esc(r[1])}" style="background:${st==="Grand Central"?"rgba(246,205,166,.75)":c};top:${s*PPM}px;height:${(e-s)*PPM-3}px">`;
       if(cs.has(r[1]))h+=`<span class="cl"></span>`;
-      if(isMine)h+=`<span class="star">&#9733;</span>`;
+      if(isMine)h+=`<span class="star">&#9733;</span>`; else if(isRec)h+=`<span class="star pickdot">&#9679;</span>`;
       h+=`<span class="nm">${esc(r[1])}</span>`;
       if(r[4])h+=`<span class="b2b">${esc(r[4])}</span>`;
       h+=`<span class="tm">${sh(s)}&ndash;${sh(e)}</span>`;
@@ -573,7 +646,7 @@ function renderPanels(){
 function openSheet(name){
   const r=DATA[day].find(x=>x[1]===name);if(!r)return;
   const key=k(day,name), isMine=mine.has(key);
-  const why=REC[key]||NOTE[key]||"";
+  const why=REC[key]||NOTE[key]||INFO[key]||"";
   const cl=clashes(day).filter(c=>c.a[1]===name||c.b[1]===name);
   const cw=crewFor(key);
   let h=`<h3>${esc(name)}${r[4]?" "+esc(r[4]):""}</h3>
@@ -737,6 +810,12 @@ document.querySelector(".tools").addEventListener("click",e=>{
   const b=e.target.closest("button[data-act]"); if(!b)return;
   if(b.dataset.act==="copy"){ if(!mine.size){toast("Nothing picked yet");return;} copy(myText()); }
   if(b.dataset.act==="share"){ copy(boardLink()); }
+  if(b.dataset.act==="qr"){
+    const q=document.getElementById("qrBox");
+    q.hidden=!q.hidden;
+    b.textContent=q.hidden?"Show QR code":"Hide QR code";
+    if(!q.hidden)q.scrollIntoView({block:"nearest"});
+  }
 });
 document.getElementById("nameIn").addEventListener("input",e=>{
   myName=e.target.value.slice(0,24);
