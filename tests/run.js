@@ -16,10 +16,14 @@ for (const f of files) {
       encoding: "utf8", timeout: 60000, stdio: ["ignore", "pipe", "pipe"]
     });
   } catch (e) {
-    out = (e.stdout || "") + (e.stderr || "") + "\nPROCESS FAILED: " + e.message;
+    out = (e.stdout || "") + (e.stderr || "") + "\nFAIL process exited non-zero: " + e.message;
   }
-  // a test fails if it says so, throws, or reports a bug
-  const hits = out.split("\n").filter(l => /\bFAIL\b|\(BUG\)|^\s*Error:|Cannot read|not ok/.test(l));
+  // A test fails if it says so, throws, or reports a bug. It ALSO fails if it
+  // prints a bare `false`, because older tests log booleans instead of
+  // asserting, and one of those sat green for hours while quietly failing.
+  const hits = out.split("\n").filter(l =>
+    /\bFAIL\b|\(BUG\)|^\s*Error:|Cannot read|not ok/.test(l) ||
+    /:\s*false\s*$/.test(l));
   if (hits.length) bad.push({ f, hits: hits.slice(0, 6) });
   console.log((hits.length ? "FAIL  " : "ok    ") + f);
 }

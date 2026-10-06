@@ -198,6 +198,8 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 #nowPanel .card.hot{border-color:#E3112A}
 .firetag{font-family:var(--ui);font-size:10px;font-weight:800;background:#E3112A;color:#fff;
   border-radius:3px;padding:1px 5px;vertical-align:2px}
+.linky{background:none;border:0;padding:0;font-family:var(--ui);font-size:12.5px;
+  font-weight:700;text-decoration:underline;cursor:pointer;color:inherit;opacity:.72}
 .acts.checkin{margin-top:9px;padding-top:11px;border-top:2px dashed var(--rule)}
 .crewhead{display:flex;align-items:center;gap:8px;margin:14px 0 2px;padding-bottom:5px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
 .ch-name{font-family:var(--disp);font-size:14px;text-transform:uppercase;letter-spacing:.01em}
@@ -1118,27 +1120,59 @@ function showWelcome(force){
   if(!w)return;
   w.hidden=false;
   w.innerHTML=`<div class="card">
-    <div class="whead"><span class="t1">Which group are you with?</span><button class="wx" id="wClose" aria-label="Close">&times;</button></div>
-    <div class="t3">This link puts you on crew <b>${esc(BOARD)}</b>. Everyone on a crew sees each other's picks. If you are here with a different group, make your own crew and send that link to them instead.</div>
-    <input id="wName" class="fld" maxlength="32" placeholder="your crew name" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="whead"><span class="t1">What should we call you?</span><button class="wx" id="wClose" aria-label="Close">&times;</button></div>
+    <div class="t3">This link puts you on crew <b>${esc(BOARD)}</b>. Everyone on it sees each other's picks, so your name is how you show up to them.</div>
+    <input id="wName" class="fld" maxlength="24" placeholder="your name" autocapitalize="words" autocorrect="off" spellcheck="false" value="${esc(myName)}">
     <div class="tools" style="margin:10px 0 0">
-      <button id="wMake">Make this my crew</button>
-      <button id="wStay">Stay on ${esc(BOARD)}</button>
+      <button id="wJoin" class="fill">Join ${esc(BOARD)}</button>
+    </div>
+    <div style="margin-top:12px"><button class="linky" id="wOther">I am here with a different group</button></div>
+    <div id="wCrewBox" hidden>
+      <div class="t2" style="margin-top:9px">Make your own crew and send that link to them instead. Your name comes with you.</div>
+      <input id="wCrew" class="fld" maxlength="32" placeholder="your crew name, e.g. boston" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="tools" style="margin:9px 0 0"><button id="wMake">Make this my crew</button></div>
     </div>
   </div>`;
   const close=()=>{ markWelcomed(); w.hidden=true; w.innerHTML=""; syncCrewsBtn(); };
   document.getElementById("wClose").onclick=close;
-  document.getElementById("wStay").onclick=close;
   syncCrewsBtn();
-  document.getElementById("wMake").onclick=()=>{
-    const v=document.getElementById("wName").value;
-    if(!String(v||"").trim()){ toast("Give your crew a name first"); return; }
-    markWelcomed();
-    goToCrew(v);
+
+  const nameBox=document.getElementById("wName");
+  document.getElementById("wJoin").onclick=()=>{
+    const v=nameBox.value;
+    if(!String(v||"").trim()){ toast("Put your name in so people know who you are"); nameBox.focus(); return; }
+    setMyName(v);
+    toast("You are on "+BOARD+" as "+myName);
+    close();
   };
-  document.getElementById("wName").addEventListener("keydown",e=>{
+  document.getElementById("wOther").onclick=e=>{
+    document.getElementById("wCrewBox").hidden=false;
+    e.currentTarget.style.display="none";
+    document.getElementById("wCrew").focus();
+  };
+  document.getElementById("wMake").onclick=()=>{
+    const c=document.getElementById("wCrew").value;
+    if(!String(c||"").trim()){ toast("Give your crew a name first"); return; }
+    /* save the name before navigating, since the hash change reloads the page */
+    if(String(nameBox.value||"").trim())setMyName(nameBox.value);
+    markWelcomed();
+    goToCrew(c);
+  };
+  nameBox.addEventListener("keydown",e=>{
+    if(e.key==="Enter")document.getElementById("wJoin").click();
+  });
+  document.getElementById("wCrew").addEventListener("keydown",e=>{
     if(e.key==="Enter")document.getElementById("wMake").click();
   });
+}
+
+/* One place that sets the name, so the modal and the Crews panel agree. */
+function setMyName(v){
+  myName=String(v||"").slice(0,24).trim();
+  try{localStorage.setItem(LSN,myName);}catch(_){}
+  const n=document.getElementById("nameIn");
+  if(n&&n.value!==myName)n.value=myName;
+  push();
 }
 
 function renderNow(){

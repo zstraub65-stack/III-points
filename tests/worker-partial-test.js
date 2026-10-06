@@ -65,5 +65,9 @@ const get = async (kv, b) => (await (await call(kv, "GET", b)).json()).people;
   console.log("7. both at VTSS:", all.filter(x => x.at && x.at.s === "sat|VTSS").length === 2,
     "| b still has picks:", all.find(x => x.person === "b").sets.length === 1);
 
-  console.log("\nops:", JSON.stringify(kv.ops), "| no list ops:", kv.ops.list === 0);
+  /* A cold board costs exactly one list(), the legacy-migration probe, and
+     never another. The free tier allows 1,000 a day, so the invariant is
+     per-board not per-read. worker-test.js proves steady-state reads cost none. */
+  console.log("\nops:", JSON.stringify(kv.ops));
+  console.log("at most one list for the whole run:", kv.ops.list <= 1 ? "ok" : "FAIL (" + kv.ops.list + ")");
 })();

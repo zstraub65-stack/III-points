@@ -100,6 +100,14 @@ Worth knowing: on at least four occasions a failing test was the test being wron
 not the code. Read the failure before changing the source. Equally, two shipped
 bugs were caught only because a test drove the real DOM rather than a mock.
 
+Test debt: the newer files assert with `ck(label, got, want)` and end with a
+verdict. Several older ones (`checkin`, `crew`, `shapes`, `layout`, `verify`,
+`worker`, `worker-partial`) still print booleans for a human to read. That is how
+`worker-test.js` sat reported-green while crashing on a syntax error, and how a
+stale `welcome-test.js` logged `false` twice without failing. The runner now
+catches both, but converting the rest to assertions is worth doing before relying
+on the suite for anything larger.
+
 ## 2. Known weaknesses
 
 Ordered by how much they would hurt.

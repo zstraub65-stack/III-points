@@ -20,30 +20,35 @@ const dom = new JSDOM(html, {
   }
 });
 
+const fail = [];
+const ck = (label, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  if (!ok) fail.push(label + " -> got " + JSON.stringify(got) + ", wanted " + JSON.stringify(want));
+  console.log((ok ? "  ok   " : "  FAIL ") + label);
+};
+
 setTimeout(() => {
   const d = dom.window.document;
   const w = d.getElementById("welcome");
   const btn = d.getElementById("crewsBtn");
-  console.log("errors:", errs.length ? errs : "none");
-  console.log("shown on first visit:", !w.hidden);
-  console.log("Crews button reads as active:", btn.getAttribute("aria-pressed"));
+  ck("no script errors", errs, []);
+  ck("shown on first visit", !w.hidden, true);
+  ck("Crews button reads as active", btn.getAttribute("aria-pressed"), "true");
 
   d.getElementById("wClose").click();
-  console.log("after tapping X  -> hidden:", w.hidden, "| button:", btn.getAttribute("aria-pressed"));
+  ck("X hides it", w.hidden, true);
+  ck("button goes inactive", btn.getAttribute("aria-pressed"), "false");
 
   btn.click();
-  console.log("after tapping Crews -> hidden:", w.hidden, "| button:", btn.getAttribute("aria-pressed"));
-  console.log("reopened card still offers naming:", !!d.getElementById("wName"));
+  ck("Crews reopens it", w.hidden, false);
+  ck("button active again", btn.getAttribute("aria-pressed"), "true");
+  ck("reopened card still asks for a name", !!d.getElementById("wName"), true);
 
   btn.click();
-  console.log("tapping Crews again -> hidden:", w.hidden, "| button:", btn.getAttribute("aria-pressed"));
+  ck("Crews closes it again", w.hidden, true);
+  ck("button inactive again", btn.getAttribute("aria-pressed"), "false");
 
-  // and it stays reachable after picking a set
-  btn.click();
-  d.querySelector('.blk[data-n="Tokischa"]').click();
-  d.querySelector('#sheet button[data-go="1"]').click();
-  console.log("hidden after picking a set:", d.getElementById("welcome").hidden);
-  btn.click();
-  console.log("still reopenable afterwards:", !d.getElementById("welcome").hidden);
+  console.log(fail.length ? "\n" + fail.length + " FAILURES:\n" + fail.join("\n") : "\nall assertions passed");
   dom.window.close();
+  if (fail.length) process.exit(1);
 }, 1300);

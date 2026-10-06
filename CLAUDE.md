@@ -21,10 +21,13 @@ tests/              node + jsdom, run with `npm test`
 
 ## Hard rules
 
-1. **Run `npm test` before and after every change.** 12 files, ~150 assertions,
-   all green at last commit. jsdom drives the real `public/index.html` with a
-   frozen festival clock. A change that breaks a test is a regression until
-   proven otherwise; several times the test was right and the code was wrong.
+1. **Run `npm test` before and after every change.** 13 files, all green at last
+   commit. jsdom drives the real `public/index.html` with a frozen festival
+   clock. A change that breaks a test is a regression until proven otherwise;
+   several times the test was right and the code was wrong, and twice it was the
+   reverse. **Assert, never print booleans.** Use the `ck(label, got, want)`
+   pattern and end with a verdict line; the runner treats a bare `: false` as a
+   failure, because a stale test that logged `false` sat green for hours.
 2. **Picks are keyed `day|artistname`.** Renaming an artist in the schedule
    orphans everyone who picked that set. Migrate, never rename.
 3. **KV free tier allows 1,000 list operations a day.** Never add a `list()` to a
