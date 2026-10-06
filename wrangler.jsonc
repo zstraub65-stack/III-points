@@ -1,0 +1,25 @@
+{
+  // Cloudflare reads this on every deploy from GitHub. The KV binding below is
+  // why the dashboard no longer needs to be touched.
+  "name": "iii-points",
+  "main": "worker-entry.js",
+  "compatibility_date": "2025-02-04",
+
+  // Everything in public/ is served as a static file. index.html is the page.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // The shared board. "PICKS" is the name the code uses: env.PICKS
+  "kv_namespaces": [
+    {
+      "binding": "PICKS",
+      "id": "8685ee6c39594812ac20dcc4c3841d8a"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}
