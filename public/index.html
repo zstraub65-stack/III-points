@@ -1289,7 +1289,8 @@ function statusLine(){
      and it outranks the other messages for the ten minutes it is up. */
   const up=nextUp();
   if(up){
-    document.getElementById("who").innerHTML=
+    /* keep the connection dot: signal matters most on the night */
+    document.getElementById("who").innerHTML=dot+
       '<span class="soon">\u25B2 '+esc(up.r[1])+'</span> '+
       (up.away<=0?"starting now":"in "+up.away+" min")+
       " \u00b7 "+esc(up.r[0])+(up.more?" \u00b7 +"+up.more+" more":"");
