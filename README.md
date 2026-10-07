@@ -15,3 +15,8 @@ the current state and the plan to make it work for festivals other than III Poin
 red
 Deployed 2026-10-06
 update 2026-10-06 21:46
+
+## License
+
+All rights reserved. See `LICENSE`. The source is public for reference, not for reuse.
+Pull requests are welcome and are merged at the author's discretion.
