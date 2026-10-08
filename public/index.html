@@ -184,8 +184,8 @@ body.night #setup code{background:rgba(255,255,255,.1)}
   letter-spacing:.14em;text-align:center;padding:4px 0 3px;border-radius:5px 5px 0 0}
 .spot{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;background:var(--ink);
   padding:3px;border-radius:0 0 5px 5px}
-.spot .cell{aspect-ratio:1;background:var(--rail);border-radius:3px;display:flex;
-  align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;padding:2px;min-height:42px}
+.spot .cell{aspect-ratio:1.7;background:var(--rail);border-radius:3px;display:flex;
+  align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;padding:2px;min-height:34px}
 .spot .cell.me{background:#F2A03D;box-shadow:inset 0 0 0 2px var(--ink)}
 .spot .cell i{width:11px;height:11px;display:block}
 .spot .cell b{font-family:var(--ui);font-size:9px;font-weight:800}
@@ -196,6 +196,11 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .blk.livehere{box-shadow:0 0 0 2px #E3112A inset}
 .nowline{position:absolute;left:0;right:0;border-top:2px solid #E3112A;pointer-events:none;z-index:7}
 .nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:#E3112A}
+#helpPanel{margin:12px 16px 0}
+#helpPanel .hh{margin-top:14px}
+#helpPanel .hh:first-of-type{margin-top:4px}
+#helpPanel .t3{margin-top:3px}
+#helpBtn{min-width:34px}
 #nowPanel{margin:12px 16px 0}
 #nowPanel .card.hot{border-color:#E3112A}
 .firetag{font-family:var(--ui);font-size:10px;font-weight:800;background:#E3112A;color:#fff;
@@ -249,6 +254,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <button class="tg" id="fCrew" aria-pressed="false">Crew</button>
     <span class="grow"></span>
     <button class="tg" id="nowBtn" aria-pressed="false">Now</button>
+    <button class="tg" id="helpBtn" aria-pressed="false" aria-label="How to use this">?</button>
     <button class="tg" id="crewsBtn" aria-pressed="false">Crews</button>
     <button class="tg" id="fNight" aria-pressed="false">Night</button>
     <div class="who" id="who">Loading the board…</div>
@@ -257,6 +263,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
   <div id="setup" hidden></div>
   <div id="welcome" hidden></div>
   <div id="nowPanel" hidden></div>
+  <div id="helpPanel" hidden></div>
 
   <div id="scroll"><div id="grid"></div></div>
 
@@ -269,8 +276,15 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <div id="qrBox" hidden>
       <div class="card" style="text-align:center">
         <div class="t1">Scan to join this crew</div>
+        <div class="t2" style="margin-top:2px">They see your picks and you see theirs.</div>
         <div class="qrwrap" id="qrwrap"></div>
         <div class="t2" id="qrUrl" style="word-break:break-all"></div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="t1">Scan to start their own crew</div>
+        <div class="t2" style="margin-top:2px">For someone here with a different group. Opens straight to naming it.</div>
+        <div class="qrwrap" id="qrwrapNew"></div>
+        <div class="t2" id="qrUrlNew" style="word-break:break-all"></div>
       </div>
     </div>
     <h2 id="runhd">Friday running order</h2>
@@ -1116,8 +1130,11 @@ function push(){
 function seenWelcome(){ try{ return !!localStorage.getItem(LSW); }catch(e){ return true; } }
 function markWelcomed(){ try{ localStorage.setItem(LSW,"1"); }catch(e){} }
 
+const WANTS_NEW=/[#&]new\b/.test(location.hash);
 function showWelcome(force){
-  if(!force&&seenWelcome())return;
+  /* A "start your own crew" QR always opens the prompt, even for a browser
+     that has seen it before. */
+  if(!force&&!WANTS_NEW&&seenWelcome())return;
   const w=document.getElementById("welcome");
   if(!w)return;
   w.hidden=false;
@@ -1140,6 +1157,11 @@ function showWelcome(force){
   syncCrewsBtn();
 
   const nameBox=document.getElementById("wName");
+  if(WANTS_NEW&&!seenWelcome()){
+    /* scanned the crew QR: skip straight to naming it */
+    document.getElementById("wCrewBox").hidden=false;
+    document.getElementById("wOther").style.display="none";
+  }
   document.getElementById("wJoin").onclick=()=>{
     const v=nameBox.value;
     if(!String(v||"").trim()){ toast("Put your name in so people know who you are"); nameBox.focus(); return; }
@@ -1175,6 +1197,45 @@ function setMyName(v){
   const n=document.getElementById("nameIn");
   if(n&&n.value!==myName)n.value=myName;
   push();
+}
+
+function renderHelp(){
+  const el=document.getElementById("helpPanel");
+  if(!el||el.hidden)return;
+  el.innerHTML=`<div class="card">
+    <div class="whead"><span class="t1">How this works</span><button class="wx" id="helpClose" aria-label="Close">&times;</button></div>
+
+    <div class="t1 hh">Picking your sets</div>
+    <div class="t3">Tap any set to open it, then <b>On my list</b>. Your picks get a solid outline and a star. Dotted outlines are suggestions, not yours.</div>
+
+    <div class="t1 hh">Saying where you are</div>
+    <div class="t3">Open the set you are actually at and tap <b>I'm here now</b>. A 4x4 grid of the room appears with the stage along the top: tap the square you are standing in. The box under it is for a landmark, like "by the sound booth", which finds people better than the grid does.<br><br>
+    <b>Mark it going off</b> tells your crew this one is worth leaving whatever they are at.<br><br>
+    You never have to check out. It clears itself when the set ends.</div>
+
+    <div class="t1 hh">Seeing everyone</div>
+    <div class="t3"><b>Now</b> shows who is checked in where, right now. <b>Crew</b> filters the grid to sets someone on your crew picked. Tap anyone's name to see their whole lineup and which sets you have in common. Each person has their own colour, each crew its own shape, and your own crew is always the triangle.</div>
+
+    <div class="t1 hh">Before your set</div>
+    <div class="t3">For ten minutes before one of your picks starts, the line under these buttons says so. The page has to be open for that, so it is a glance, not an alarm.</div>
+
+    <div class="t1 hh">Crews</div>
+    <div class="t3">Everyone on your link shares picks with each other. You can <b>follow</b> another crew to see their picks on your grid without showing them yours. Both QR codes are under <b>Crews</b>.</div>
+
+    <div class="t2" style="margin-top:12px">Set times were typed in by hand from the posters. Check anything you are planning around against the official app.</div>
+  </div>`;
+}
+function syncHelpBtn(){
+  const b=document.getElementById("helpBtn"), p=document.getElementById("helpPanel");
+  if(b&&p)b.setAttribute("aria-pressed",String(!p.hidden));
+}
+function toggleHelp(){
+  const p=document.getElementById("helpPanel");
+  if(!p)return;
+  p.hidden=!p.hidden;
+  if(!p.hidden){ renderHelp(); p.scrollIntoView&&p.scrollIntoView({block:"nearest"}); }
+  else p.innerHTML="";
+  syncHelpBtn();
 }
 
 function renderNow(){
@@ -1382,11 +1443,11 @@ async function copy(t){
   }
 }
 function boardLink(){return location.origin+location.pathname+"#board="+BOARD;}
+function newCrewLink(){return location.origin+location.pathname+"#new";}
 
-function drawQR(){
-  const wrap=document.getElementById("qrwrap");
+function drawOneQR(wrapId,urlId,link,label){
+  const wrap=document.getElementById(wrapId);
   if(!wrap||typeof qrcode!=="function")return;
-  const link=boardLink();
   try{
     const q=qrcode(0,"M"); q.addData(link); q.make();
     const n=q.getModuleCount(), b=2, size=n+b*2;
@@ -1400,12 +1461,16 @@ function drawQR(){
         x+=w;
       }
     }
-    wrap.innerHTML='<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="QR code for this crew"><rect width="'+size+'" height="'+size+'" fill="#fff"/><g fill="#000">'+rects+'</g></svg>';
-    const u=document.getElementById("qrUrl");
+    wrap.innerHTML='<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" role="img" aria-label="'+esc(label)+'"><rect width="'+size+'" height="'+size+'" fill="#fff"/><g fill="#000">'+rects+'</g></svg>';
+    const u=document.getElementById(urlId);
     if(u)u.textContent=link.replace(/^https?:\/\//,"");
   }catch(e){
     wrap.textContent="Could not draw the code. Use Copy the board link instead.";
   }
+}
+function drawQR(){
+  drawOneQR("qrwrap","qrUrl",boardLink(),"QR code to join crew "+BOARD);
+  drawOneQR("qrwrapNew","qrUrlNew",newCrewLink(),"QR code to start your own crew");
 }
 
 function goToCrew(name){
@@ -1434,7 +1499,13 @@ document.getElementById("sheet").addEventListener("click",e=>{
     dropPerson(b.dataset.drop); closeSheet(); return;
   }
   if(b.dataset.go!==undefined){toggle(document.getElementById("sheet").dataset.n,b.dataset.go==="1");closeSheet();}
-  if(b.dataset.checkin){ checkIn(k(day,document.getElementById("sheet").dataset.n),false); closeSheet(); }
+  if(b.dataset.checkin){
+    /* Keep the sheet up: the crowd grid appears below, so placing yourself is
+       the next tap instead of a reopen. */
+    const n=document.getElementById("sheet").dataset.n;
+    checkIn(k(day,n),false);
+    setTimeout(()=>openSheet(n),60);
+  }
   if(b.dataset.checkout){ checkIn(null); closeSheet(); }
   if(b.dataset.fire){ const c=myCheckIn(); if(c)checkIn(c.s,!c.fire); closeSheet(); }
   if(b.dataset.cell){
@@ -1475,6 +1546,10 @@ document.getElementById("crew").addEventListener("keydown",e=>{
   if(row&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); openPerson(row.dataset.pid); }
 });
 document.getElementById("nowBtn").addEventListener("click",toggleNow);
+document.getElementById("helpBtn").addEventListener("click",toggleHelp);
+document.getElementById("helpPanel").addEventListener("click",e=>{
+  if(e.target.closest("#helpClose"))toggleHelp();
+});
 document.getElementById("nowPanel").addEventListener("click",e=>{
   if(e.target.closest("#nowClose")){ toggleNow(); return; }
   if(e.target.closest("#nowLeave")){ checkIn(null); return; }
