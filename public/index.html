@@ -129,6 +129,12 @@ body.night .soon{color:#FF5A6E}
 .card .t1{font-family:var(--disp);font-size:15px;text-transform:uppercase;letter-spacing:.01em}
 .card .t2{font-size:12.5px;font-family:var(--mono);opacity:.72;margin-top:3px}
 .card .t3{font-size:13px;margin-top:7px;line-height:1.45}
+.runrow{cursor:pointer;border-radius:5px;margin:0 -6px;padding-left:6px;padding-right:6px}
+.runrow:hover,.runrow:focus-visible{background:rgba(0,0,0,.05);outline:none}
+body.night .runrow:hover,body.night .runrow:focus-visible{background:rgba(255,255,255,.08)}
+.runwith{display:inline-flex;gap:3px;align-items:center;margin-top:4px;
+  font-family:var(--mono);font-size:10px;font-weight:700;opacity:.9}
+.runmk{width:9px;height:9px;display:block}
 .row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--rule);align-items:flex-start}
 .row b{font-family:var(--mono);font-size:12px;min-width:58px;font-weight:500}
 .row .s{font-weight:700;font-size:13.5px}
@@ -809,7 +815,14 @@ function renderPanels(){
   if(!rows.length)h=`<div class="card"><div class="t3">Nothing on your list for this day yet. Tap any block on the grid to add it.</div></div>`;
   rows.forEach(r=>{
     const cw=crewFor(k(day,r[1]));
-    h+=`<div class="row"><b>${sh(T(r[2]))}</b><span class="s">${esc(r[1])}${r[4]?" "+esc(r[4]):""}<small>${esc(r[0])}${cs.has(r[1])?" · clash":""}${cw.length?" · with "+cw.length:""}</small></span></div>`;
+    /* who is joining you, as their own shape and colour, instead of a bare count */
+    const marks=cw.slice(0,6).map(p=>
+      `<i class="mk runmk mk-${shapeFor(p.board)}" style="background:${colorFor(p.person)}" title="${esc(p.name||"Someone")}"></i>`).join("");
+    h+=`<div class="row runrow" data-run="${esc(r[1])}" role="button" tabindex="0">`+
+       `<b>${sh(T(r[2]))}</b><span class="s">${esc(r[1])}${r[4]?" "+esc(r[4]):""}`+
+       `<small>${esc(r[0])}${cs.has(r[1])?" \u00b7 clash":""}</small>`+
+       (cw.length?`<span class="runwith">${marks}${cw.length>6?"+"+(cw.length-6):""}</span>`:"")+
+       `</span></div>`;
   });
   document.getElementById("run").innerHTML=h;
 
@@ -1556,6 +1569,15 @@ document.getElementById("nowPanel").addEventListener("click",e=>{
   const chip=e.target.closest("span[data-pid]");
   if(chip)openPerson(chip.dataset.pid);
 });
+const runRow=e=>{
+  const row=e.target.closest("[data-run]");
+  if(!row)return;
+  if(e.type==="keydown"&&e.key!==" "&&e.key!=="Enter")return;
+  e.preventDefault();
+  openSheet(row.dataset.run);
+};
+document.getElementById("run").addEventListener("click",runRow);
+document.getElementById("run").addEventListener("keydown",runRow);
 document.getElementById("crewsBtn").addEventListener("click",toggleWelcome);
 document.getElementById("fNight").addEventListener("click",e=>{
   const on=!document.body.classList.contains("night");
