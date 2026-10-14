@@ -39,7 +39,11 @@ tests/              node + jsdom, run with `npm test`
    check-in or someone's picks.
 5. **Don't invent set descriptions.** 149 of 231 sets have no note on purpose.
    Blank means unknown, not missing.
-6. **`wrangler.jsonc` holds all config.** The owner works from a phone much of
+6. **`public/map.jpg` is the official festival map and is NOT in this repo.**
+   The Map tab overlays tap targets on it at normalised coordinates in
+   `MAPIMG`. When the file is absent the page falls back to a drawn schematic,
+   so both paths must keep working. Do not commit the festival's artwork.
+7. **`wrangler.jsonc` holds all config.** The owner works from a phone much of
    the time, where the Cloudflare dashboard is close to unusable.
 
 ## Deploying

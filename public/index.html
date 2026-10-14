@@ -203,6 +203,17 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .nowline{position:absolute;left:0;right:0;border-top:2px solid #E3112A;pointer-events:none;z-index:7}
 .nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:#E3112A}
 #mapPanel{margin:12px 16px 0}
+.mapimg{position:relative;margin:10px 0 4px;line-height:0}
+.mapimg img{display:block;width:100%;height:auto;border-radius:7px;border:2px solid var(--ink)}
+.mapimg .hit{position:absolute;transform:translate(-50%,-50%);width:13%;height:5.5%;
+  min-width:44px;min-height:30px;background:transparent;border:2px solid transparent;
+  border-radius:7px;cursor:pointer;padding:0;display:flex;align-items:flex-start;
+  justify-content:space-between}
+.mapimg .hit:hover,.mapimg .hit:focus-visible{border-color:var(--ink);background:rgba(255,255,255,.22);outline:none}
+.mapimg .hit.hot{border-color:#E3112A}
+.mapimg .hit .hs{font-size:13px;line-height:1;color:#14121A;text-shadow:0 0 3px #fff,0 0 3px #fff;font-style:normal}
+.mapimg .hit .hn{font-family:var(--ui);font-size:10px;font-weight:800;line-height:15px;
+  min-width:15px;height:15px;border-radius:50%;background:#E3112A;color:#fff;text-align:center;font-style:normal}
 #mapSvg{display:block;width:100%;height:auto;margin:10px 0 9px;font-family:var(--disp);letter-spacing:.02em}
 .mapstage{cursor:pointer}
 .mapstage rect{stroke:var(--ink);stroke-width:.45}
@@ -375,6 +386,28 @@ const MAP={
   "RC95":               [22, 66, 22,  9]
 };
 const MAP_ENTRANCE=[36, 84, 28, 8];
+
+/* Where each stage sits on the official map, as a fraction of the image.
+   Estimated by eye from the artwork, so nudge these if a tap feels off.
+   Only used when public/map.jpg is present. */
+const MAPIMG={
+  "S3QUENC3":           [0.345, 0.400],
+  "Players Club":       [0.497, 0.311],
+  "Mind Melt":          [0.675, 0.278],
+  "444":                [0.795, 0.336],
+  "Red Bull Unforeseen":[0.790, 0.400],
+  "Door IV":            [0.520, 0.446],
+  "Isotropic":          [0.155, 0.507],
+  "III Points Radio":   [0.372, 0.525],
+  "Sector 3":           [0.575, 0.533],
+  "Vertex":             [0.795, 0.515],
+  "Halo 88":            [0.245, 0.590],
+  "Grand Central":      [0.797, 0.622],
+  "RC95":               [0.313, 0.692]
+};
+const MAP_SRC="map.jpg";
+/* set once the image either loads or fails, so we know which map to draw */
+let mapImgOK=null;
 
 /* ===== schedule, transcribed from the two official posters ===== */
 const FRI=[
@@ -1299,10 +1332,40 @@ function fitLabel(text,w,h){
   return best;
 }
 
+/* Badges that go on either map: a star for your picks, a count for who is
+   standing there. Returns {star, here} for a stage. */
+function stageBadges(stage,now){
+  return {
+    here: liveAtStage(stage,now).length,
+    star: picksAtStage(stage).some(p=>p.meToo)
+  };
+}
+
+/* The official map with tap targets over it. */
+function renderMapImage(el,now){
+  let hits="";
+  Object.keys(MAPIMG).forEach(stage=>{
+    const [cx,cy]=MAPIMG[stage];
+    const b=stageBadges(stage,now);
+    hits+='<button class="hit'+(b.here?" hot":"")+'" data-stage="'+esc(stage)+'"'+
+      ' style="left:'+(cx*100).toFixed(2)+'%;top:'+(cy*100).toFixed(2)+'%"'+
+      ' aria-label="'+esc(stage)+(b.here?", "+b.here+" here now":"")+'">'+
+      (b.star?'<i class="hs">\u2605</i>':'')+
+      (b.here?'<i class="hn">'+b.here+'</i>':'')+
+      '</button>';
+  });
+  el.innerHTML='<div class="card">'+
+    '<div class="whead"><span class="t1">Site map</span><button class="wx" id="mapClose" aria-label="Close">&times;</button></div>'+
+    '<div class="t2">Tap a stage. A star means you have a pick there, a red number means people are there now.</div>'+
+    '<div class="mapimg"><img src="'+MAP_SRC+'" alt="Festival site map">'+hits+'</div>'+
+    '</div>';
+}
+
 function renderMap(){
   const el=document.getElementById("mapPanel");
   if(!el||el.hidden)return;
   const now=Date.now();
+  if(mapImgOK){ renderMapImage(el,now); return; }
   let boxes="";
   Object.keys(MAP).forEach(stage=>{
     const [x,y,w,h]=MAP[stage];
@@ -1870,6 +1933,13 @@ window.addEventListener("hashchange",()=>location.reload());
 function draw(){renderGrid();renderPanels();renderNow();renderMap();statusLine();}
 
 /* ===== boot ===== */
+/* Look for the official map once. Until we know, the drawn fallback shows. */
+(function probeMap(){
+  const im=new Image();
+  im.onload=()=>{ mapImgOK=true; renderMap(); };
+  im.onerror=()=>{ mapImgOK=false; renderMap(); };
+  im.src=MAP_SRC;
+})();
 cacheLoad();
 document.getElementById("nameIn").value=myName;
 document.getElementById("boardName").textContent=BOARD;

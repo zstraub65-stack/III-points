@@ -116,6 +116,33 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   d.getElementById("mapClose").click(); await wait(60);
   ck("the X closes it too", d.getElementById("mapPanel").hidden, true);
 
+  console.log("\n=== with the official map present");
+  // the page probes for map.jpg; pretend it loaded
+  d.getElementById("mapBtn").click(); await wait(60);        // open
+  w.eval("mapImgOK=true;renderMap()");
+  await wait(80);
+  ck("shows the image", !!d.querySelector(".mapimg img"), true);
+  ck("drops the drawn fallback", !!d.getElementById("mapSvg"), false);
+  const hits = [...d.querySelectorAll(".mapimg .hit")].map(b => b.dataset.stage).sort();
+  ck("a tap target per stage", hits, Object.keys(w.eval("ST")).sort());
+  const rc = [...d.querySelectorAll(".mapimg .hit")].find(b => b.dataset.stage === "RC95");
+  ck("positioned, not stacked", rc.style.left !== "" && rc.style.top !== "", true);
+  ck("still flags your pick", !!rc.querySelector(".hs"), true);
+  ck("still counts who is there", rc.querySelector(".hn").textContent, "1");
+  ck("marked hot", rc.classList.contains("hot"), true);
+  ck("and named for screen readers", /RC95/.test(rc.getAttribute("aria-label")), true);
+  rc.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  await wait(120);
+  ck("tapping it opens the same sheet", /RC95/.test(d.getElementById("sheet").textContent), true);
+  d.querySelector("#sheet button[data-close]").click(); await wait(60);
+
+  console.log("\n=== and without it");
+  w.eval("mapImgOK=false;renderMap()");
+  await wait(80);
+  ck("falls back to the drawn map", !!d.getElementById("mapSvg"), true);
+  ck("no broken image", !!d.querySelector(".mapimg img"), false);
+  ck("stages still tappable", d.querySelectorAll("#mapPanel [data-stage]").length, 13);
+
   console.log(fail.length ? "\n" + fail.length + " FAILURES:\n" + fail.join("\n") : "\nall assertions passed");
   setTimeout(() => dom.window.close(), 100);
   if (fail.length) process.exitCode = 1;
