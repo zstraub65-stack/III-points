@@ -405,8 +405,10 @@ const MAPIMG={
   "Grand Central":      [0.797, 0.622],
   "RC95":               [0.313, 0.692]
 };
-const MAP_SRC="map.jpg";
-/* set once the image either loads or fails, so we know which map to draw */
+/* Whatever the phone called it on the way in. First one that loads wins. */
+const MAP_SRC_TRY=["map.jpg","map.jpeg","map.png","map.webp","map.JPG","map.JPEG"];
+let MAP_SRC=null;
+/* set once an image either loads or every name has failed */
 let mapImgOK=null;
 
 /* ===== schedule, transcribed from the two official posters ===== */
@@ -1934,11 +1936,13 @@ function draw(){renderGrid();renderPanels();renderNow();renderMap();statusLine()
 
 /* ===== boot ===== */
 /* Look for the official map once. Until we know, the drawn fallback shows. */
-(function probeMap(){
+(function probeMap(i){
+  i=i||0;
+  if(i>=MAP_SRC_TRY.length){ mapImgOK=false; renderMap(); return; }
   const im=new Image();
-  im.onload=()=>{ mapImgOK=true; renderMap(); };
-  im.onerror=()=>{ mapImgOK=false; renderMap(); };
-  im.src=MAP_SRC;
+  im.onload=()=>{ MAP_SRC=MAP_SRC_TRY[i]; mapImgOK=true; renderMap(); };
+  im.onerror=()=>probeMap(i+1);
+  im.src=MAP_SRC_TRY[i];
 })();
 cacheLoad();
 document.getElementById("nameIn").value=myName;

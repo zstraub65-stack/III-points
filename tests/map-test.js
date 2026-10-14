@@ -119,9 +119,10 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   console.log("\n=== with the official map present");
   // the page probes for map.jpg; pretend it loaded
   d.getElementById("mapBtn").click(); await wait(60);        // open
-  w.eval("mapImgOK=true;renderMap()");
+  w.eval("MAP_SRC='map.jpeg';mapImgOK=true;renderMap()");   // whatever name the phone used
   await wait(80);
   ck("shows the image", !!d.querySelector(".mapimg img"), true);
+  ck("uses the name that actually loaded", d.querySelector(".mapimg img").getAttribute("src"), "map.jpeg");
   ck("drops the drawn fallback", !!d.getElementById("mapSvg"), false);
   const hits = [...d.querySelectorAll(".mapimg .hit")].map(b => b.dataset.stage).sort();
   ck("a tap target per stage", hits, Object.keys(w.eval("ST")).sort());
