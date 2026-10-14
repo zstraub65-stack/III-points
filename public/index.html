@@ -202,6 +202,13 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .blk.livehere{box-shadow:0 0 0 2px #E3112A inset}
 .nowline{position:absolute;left:0;right:0;border-top:2px solid #E3112A;pointer-events:none;z-index:7}
 .nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:#E3112A}
+#mapPanel{margin:12px 16px 0}
+#mapSvg{display:block;width:100%;height:auto;margin:10px 0 9px;font-family:var(--disp);letter-spacing:.02em}
+.mapstage{cursor:pointer}
+.mapstage rect{stroke:var(--ink);stroke-width:.45}
+.mapstage rect.hot{stroke:#E3112A;stroke-width:.9}
+.mapstage:hover rect,.mapstage:focus-visible rect{stroke-width:1.1;outline:none}
+.mapstage:focus-visible{outline:none}
 #helpPanel{margin:12px 16px 0}
 #helpPanel .hh{margin-top:14px}
 #helpPanel .hh:first-of-type{margin-top:4px}
@@ -259,6 +266,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <button class="tg" id="fMine" aria-pressed="false">Mine</button>
     <button class="tg" id="fCrew" aria-pressed="false">Crew</button>
     <span class="grow"></span>
+    <button class="tg" id="mapBtn" aria-pressed="false">Map</button>
     <button class="tg" id="nowBtn" aria-pressed="false">Now</button>
     <button class="tg" id="helpBtn" aria-pressed="false" aria-label="How to use this">?</button>
     <button class="tg" id="crewsBtn" aria-pressed="false">Crews</button>
@@ -269,6 +277,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
   <div id="setup" hidden></div>
   <div id="welcome" hidden></div>
   <div id="nowPanel" hidden></div>
+  <div id="mapPanel" hidden></div>
   <div id="helpPanel" hidden></div>
 
   <div id="scroll"><div id="grid"></div></div>
@@ -344,6 +353,28 @@ function T(s){const m=s.match(/^(\d{1,2}):(\d{2})(am|pm)$/);let h=+m[1];const mi
 function fmt(t){const tot=t+960,h24=Math.floor(tot/60)%24,m=tot%60;
  const ap=h24>=12?"PM":"AM";let h=h24%12;if(!h)h=12;return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function sh(t){return fmt(t).replace(" ","").toLowerCase();}
+
+
+/* ===== site map ===== */
+/* Positions traced from the official festival map: five blocks running from
+   the entrance at the bottom up to the Mind Melt block at the top right.
+   A rough schematic, not a survey. Keys match ST exactly. */
+const MAP={
+  "Mind Melt":          [58,  4, 34, 11],
+  "Players Club":       [30, 17, 24,  9],
+  "444":                [72, 18, 20,  8],
+  "Red Bull Unforeseen":[70, 29, 22,  9],
+  "Door IV":            [34, 29, 22,  9],
+  "S3QUENC3":           [ 6, 26, 22,  9],
+  "Isotropic":          [ 2, 40, 20,  9],
+  "III Points Radio":   [26, 42, 24,  9],
+  "Sector 3":           [54, 43, 22, 10],
+  "Vertex":             [80, 43, 18, 10],
+  "Halo 88":            [ 8, 54, 20,  9],
+  "Grand Central":      [74, 57, 24, 10],
+  "RC95":               [22, 66, 22,  9]
+};
+const MAP_ENTRANCE=[36, 84, 28, 8];
 
 /* ===== schedule, transcribed from the two official posters ===== */
 const FRI=[
@@ -1212,6 +1243,163 @@ function setMyName(v){
   push();
 }
 
+/* Every set at a stage on the day being viewed. */
+function setsAt(stage,d){
+  return (DATA[d||day]||[]).filter(r=>r[0]===stage).sort((a,b)=>T(a[2])-T(b[2]));
+}
+/* Who is checked in anywhere at this stage right now. */
+function liveAtStage(stage,now){
+  now=now||Date.now();
+  return allLive(now).filter(p=>{
+    const f=rowFor(p.at.s);
+    return f&&f.r[0]===stage;
+  });
+}
+/* Your crews' picks at this stage, the set each is for. */
+function picksAtStage(stage,d){
+  d=d||day;
+  const out=[];
+  setsAt(stage,d).forEach(r=>{
+    const key=k(d,r[1]);
+    const who=crewFor(key);
+    const meToo=mine.has(key);
+    if(who.length||meToo)out.push({r,who,meToo});
+  });
+  return out;
+}
+/* What is playing at this stage at the festival's current moment. */
+function onNowAt(stage){
+  const nm=nowMinutes();
+  if(!nm)return null;
+  const r=setsAt(stage,nm.day).find(x=>nm.min>=T(x[2])&&nm.min<T(x[3]));
+  return r?{r,day:nm.day}:null;
+}
+
+/* Roughly how wide a character is in the display face, as a fraction of its
+   size. Used to pick a size that fits rather than one that looks about right. */
+const CHAR_W=0.68;   // measured generously, so labels keep a margin
+function fitLabel(text,w,h){
+  const pad=1.6, avail=w-pad*2;
+  const one=Math.min(h*0.46, avail/(text.length*CHAR_W));
+  const words=text.split(" ");
+  let best={lines:[text],size:one};
+  if(words.length>1){
+    /* balance the split so neither line dominates */
+    let bestSplit=null, bestDiff=Infinity;
+    for(let i=1;i<words.length;i++){
+      const a=words.slice(0,i).join(" "), b=words.slice(i).join(" ");
+      const diff=Math.abs(a.length-b.length);
+      if(diff<bestDiff){bestDiff=diff;bestSplit=[a,b];}
+    }
+    const longest=Math.max(bestSplit[0].length,bestSplit[1].length);
+    const two=Math.min(h*0.30, avail/(longest*CHAR_W));
+    if(two>one)best={lines:bestSplit,size:two};
+  }
+  best.size=Math.max(1.5,Math.min(3.2,best.size));
+  return best;
+}
+
+function renderMap(){
+  const el=document.getElementById("mapPanel");
+  if(!el||el.hidden)return;
+  const now=Date.now();
+  let boxes="";
+  Object.keys(MAP).forEach(stage=>{
+    const [x,y,w,h]=MAP[stage];
+    const col=ST[stage]?ST[stage][0]:"#ccc";
+    const darkText=ST[stage]&&ST[stage][1];
+    const here=liveAtStage(stage,now).length;
+    const mineHere=picksAtStage(stage).filter(p=>p.meToo).length;
+    boxes+='<g class="mapstage" data-stage="'+esc(stage)+'" role="button" tabindex="0" aria-label="'+esc(stage)+'">'+
+      '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="1.6" fill="'+col+'"'+
+        (here?' class="hot"':'')+'/>'+
+      (()=>{
+        const lab=fitLabel(stage.toUpperCase(),w,h);
+        const cy=y+h/2+0.2, lead=lab.size*1.08;
+        const y0=lab.lines.length===1?cy:cy-lead/2;
+        return '<text text-anchor="middle" dominant-baseline="middle" fill="'+(darkText?"#fff":"#14121A")+
+          '" font-size="'+lab.size.toFixed(2)+'">'+
+          lab.lines.map((ln,i)=>'<tspan x="'+(x+w/2)+'" y="'+(y0+i*lead).toFixed(2)+'">'+esc(ln)+'</tspan>').join("")+
+          '</text>';
+      })()+
+      (mineHere?'<text x="'+(x+1.6)+'" y="'+(y+2.6)+'" font-size="2.6" fill="'+(darkText?"#fff":"#14121A")+'">\u2605</text>':'')+
+      (here?'<circle cx="'+(x+w-2)+'" cy="'+(y+2)+'" r="1.7" fill="#E3112A"/>'+
+            '<text x="'+(x+w-2)+'" y="'+(y+2.1)+'" text-anchor="middle" dominant-baseline="middle" font-size="2.1" fill="#fff" font-weight="700">'+here+'</text>':'')+
+      '</g>';
+  });
+  const [ex,ey,ew,eh]=MAP_ENTRANCE;
+  boxes+='<rect x="'+ex+'" y="'+ey+'" width="'+ew+'" height="'+eh+'" rx="1.6" fill="none" stroke="var(--ink)" stroke-width="0.5" stroke-dasharray="2 1.4"/>'+
+    '<text x="'+(ex+ew/2)+'" y="'+(ey+eh/2+0.2)+'" text-anchor="middle" dominant-baseline="middle" font-size="2.6" fill="currentColor">ENTRANCE</text>';
+
+  el.innerHTML='<div class="card">'+
+    '<div class="whead"><span class="t1">Site map</span><button class="wx" id="mapClose" aria-label="Close">&times;</button></div>'+
+    '<div class="t2">Tap a stage. A star means you have a pick there, a red number means people are there now.</div>'+
+    '<svg id="mapSvg" viewBox="0 0 100 94" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Festival site map">'+boxes+'</svg>'+
+    '<div class="t2">Roughly laid out from the official map. Five city blocks in reality, so treat it as which block things are in rather than how far apart they are.</div>'+
+    '</div>';
+}
+
+function syncMapBtn(){
+  const b=document.getElementById("mapBtn"), p=document.getElementById("mapPanel");
+  if(b&&p)b.setAttribute("aria-pressed",String(!p.hidden));
+}
+function toggleMap(){
+  const p=document.getElementById("mapPanel");
+  if(!p)return;
+  p.hidden=!p.hidden;
+  if(!p.hidden){ renderMap(); p.scrollIntoView&&p.scrollIntoView({block:"nearest"}); }
+  else p.innerHTML="";
+  syncMapBtn();
+}
+
+/* --- the stage sheet --- */
+function openStage(stage){
+  const on=onNowAt(stage), here=liveAtStage(stage), picks=picksAtStage(stage);
+  const all=setsAt(stage);
+  let h='<h3>'+esc(stage)+'</h3><div class="meta">'+all.length+(all.length===1?" set":" sets")+' on '+(day==="fri"?"Friday":"Saturday")+'</div>';
+
+  if(on){
+    h+='<div class="t1" style="margin-top:12px">On now</div>'+
+       '<div class="t3"><b>'+esc(on.r[1])+'</b>'+(on.r[4]?" "+esc(on.r[4]):"")+' &middot; until '+sh(T(on.r[3]))+'</div>';
+  }
+
+  h+='<div class="t1" style="margin-top:14px">Here right now</div>';
+  if(here.length){
+    h+='<div class="goin" id="stageLive"></div>';
+  }else{
+    h+='<div class="t3">Nobody from your crews is checked in at this stage.</div>';
+  }
+
+  h+='<div class="t1" style="margin-top:14px">Who is down for what</div>';
+  if(!picks.length){
+    h+='<div class="t3">No picks here yet, from you or anyone you can see.</div>';
+  }else{
+    h+='<div class="lineup">';
+    picks.forEach(p=>{
+      const names=p.who.map(x=>esc(x.name||"Someone")).join(", ");
+      h+='<div class="row"><b>'+sh(T(p.r[2]))+'</b><span class="s">'+esc(p.r[1])+(p.r[4]?" "+esc(p.r[4]):"")+
+         '<small>'+(p.meToo?"you":"")+(p.meToo&&names?" &middot; ":"")+(names||"")+'</small></span></div>';
+    });
+    h+='</div>';
+  }
+
+  h+='<div class="acts" style="margin-top:14px"><button data-close="1">Close</button></div>';
+  const sh_=document.getElementById("sheet");
+  sh_.innerHTML=h; delete sh_.dataset.n;
+  sh_.classList.add("on"); document.getElementById("scrim").classList.add("on");
+
+  const box=document.getElementById("stageLive");
+  if(box)here.forEach(p=>{
+    const sp=document.createElement("span");
+    sp.dataset.pid=p.person; sp.style.cursor="pointer";
+    const dot=document.createElement("span");
+    dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
+    const t=document.createElement("em"); t.style.fontStyle="normal";
+    t.textContent=liveLabel(p);
+    sp.append(dot,t); box.appendChild(sp);
+  });
+}
+
 function renderHelp(){
   const el=document.getElementById("helpPanel");
   if(!el||el.hidden)return;
@@ -1560,6 +1748,17 @@ document.getElementById("crew").addEventListener("keydown",e=>{
 });
 document.getElementById("nowBtn").addEventListener("click",toggleNow);
 document.getElementById("helpBtn").addEventListener("click",toggleHelp);
+document.getElementById("mapBtn").addEventListener("click",toggleMap);
+const mapTap=e=>{
+  if(e.target.closest("#mapClose")){ toggleMap(); return; }
+  const g=e.target.closest("[data-stage]");
+  if(!g)return;
+  if(e.type==="keydown"&&e.key!==" "&&e.key!=="Enter")return;
+  e.preventDefault();
+  openStage(g.dataset.stage);
+};
+document.getElementById("mapPanel").addEventListener("click",mapTap);
+document.getElementById("mapPanel").addEventListener("keydown",mapTap);
 document.getElementById("helpPanel").addEventListener("click",e=>{
   if(e.target.closest("#helpClose"))toggleHelp();
 });
@@ -1668,7 +1867,7 @@ document.getElementById("leaveBtn").addEventListener("click",async e=>{
 });
 window.addEventListener("hashchange",()=>location.reload());
 
-function draw(){renderGrid();renderPanels();renderNow();statusLine();}
+function draw(){renderGrid();renderPanels();renderNow();renderMap();statusLine();}
 
 /* ===== boot ===== */
 cacheLoad();
