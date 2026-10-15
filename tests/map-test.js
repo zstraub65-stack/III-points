@@ -116,6 +116,53 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   d.getElementById("mapClose").click(); await wait(60);
   ck("the X closes it too", d.getElementById("mapPanel").hidden, true);
 
+  console.log("\n=== the whole lineup toggle");
+  d.getElementById("mapBtn").click(); await wait(100);   // reopen, the last section closed it
+  stage("Sector 3").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  await wait(120);
+  let sh = d.getElementById("sheet");
+  const total = w.eval("setsAt('Sector 3').length");
+  ck("defaults to your crew", sh.querySelector('[data-smode="crew"]').getAttribute("aria-pressed"), "true");
+  ck("nobody picked anything there", /Nobody you can see has picked/.test(sh.textContent), true);
+  ck("so no rows yet", sh.querySelectorAll(".lineup .row").length, 0);
+
+  sh.querySelector('[data-smode="all"]').click();
+  await wait(120);
+  sh = d.getElementById("sheet");
+  ck("switches to everything", sh.querySelector('[data-smode="all"]').getAttribute("aria-pressed"), "true");
+  ck("lists the stage's whole night", sh.querySelectorAll(".lineup .row").length, total);
+  ck("more than a couple of sets", total > 10, true);
+  ck("still the same stage", /Sector 3/.test(sh.textContent), true);
+
+  sh.querySelector('[data-smode="crew"]').click();
+  await wait(120);
+  ck("switches back", d.getElementById("sheet").querySelectorAll(".lineup .row").length, 0);
+
+  console.log("\n=== a stage where your crew is going");
+  d.querySelector("#sheet button[data-close]").click(); await wait(60);
+  stage("RC95").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  await wait(120);
+  sh = d.getElementById("sheet");
+  ck("crew view shows just the picked set", sh.querySelectorAll(".lineup .row").length, 1);
+  ck("and marks what is on now", sh.querySelectorAll(".lineup .row.nowrow").length, 1);
+  sh.querySelector('[data-smode="all"]').click();
+  await wait(120);
+  sh = d.getElementById("sheet");
+  const rc95 = w.eval("setsAt('RC95').length");
+  ck("everything shows the full RC95 night", sh.querySelectorAll(".lineup .row").length, rc95);
+  ck("your pick is starred in it", /\u2605/.test(sh.textContent), true);
+  ck("names carried over", /Vrushi/.test(sh.textContent), true);
+  ck("what is on is still marked", sh.querySelectorAll(".lineup .row.nowrow").length, 1);
+
+  console.log("\n=== the choice sticks while browsing");
+  d.querySelector("#sheet button[data-close]").click(); await wait(60);
+  stage("Vertex").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  await wait(120);
+  ck("opens straight into everything", d.getElementById("sheet").querySelector('[data-smode="all"]').getAttribute("aria-pressed"), "true");
+  d.getElementById("sheet").querySelector('[data-smode="crew"]').click(); await wait(100);
+  d.querySelector("#sheet button[data-close]").click(); await wait(60);
+  d.getElementById("mapClose").click(); await wait(60);   // leave it shut, as the next section expects
+
   console.log("\n=== with the official map present");
   // the page probes for map.jpg; pretend it loaded
   d.getElementById("mapBtn").click(); await wait(60);        // open

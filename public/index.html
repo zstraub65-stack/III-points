@@ -129,6 +129,10 @@ body.night .soon{color:#FF5A6E}
 .card .t1{font-family:var(--disp);font-size:15px;text-transform:uppercase;letter-spacing:.01em}
 .card .t2{font-size:12.5px;font-family:var(--mono);opacity:.72;margin-top:3px}
 .card .t3{font-size:13px;margin-top:7px;line-height:1.45}
+.segrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap}
+.seg.mini{flex:0 0 auto}
+.seg.mini button{font-size:11px;padding:5px 9px}
+.lineup .row.nowrow .s small{color:#E3112A;font-weight:700;opacity:1}
 .runrow{cursor:pointer;border-radius:5px;margin:0 -6px;padding-left:6px;padding-right:6px}
 .runrow:hover,.runrow:focus-visible{background:rgba(0,0,0,.05);outline:none}
 body.night .runrow:hover,body.night .runrow:focus-visible{background:rgba(255,255,255,.08)}
@@ -1418,7 +1422,12 @@ function toggleMap(){
 }
 
 /* --- the stage sheet --- */
+/* Which list the stage sheet shows. Starts on your crew, and remembers the
+   choice while the page is open so browsing stages is not repetitive. */
+let stageMode="crew";
+let stageOpen=null;
 function openStage(stage){
+  stageOpen=stage;
   const on=onNowAt(stage), here=liveAtStage(stage), picks=picksAtStage(stage);
   const all=setsAt(stage);
   let h='<h3>'+esc(stage)+'</h3><div class="meta">'+all.length+(all.length===1?" set":" sets")+' on '+(day==="fri"?"Friday":"Saturday")+'</div>';
@@ -1435,15 +1444,34 @@ function openStage(stage){
     h+='<div class="t3">Nobody from your crews is checked in at this stage.</div>';
   }
 
-  h+='<div class="t1" style="margin-top:14px">Who is down for what</div>';
-  if(!picks.length){
-    h+='<div class="t3">No picks here yet, from you or anyone you can see.</div>';
+  const everything=stageMode==="all";
+  h+='<div class="segrow"><span class="t1">'+(everything?"Everything here":"Who is down for what")+'</span>'+
+     '<span class="seg mini"><button data-smode="crew" aria-pressed="'+(!everything)+'">Your crew</button>'+
+     '<button data-smode="all" aria-pressed="'+everything+'">Everything</button></span></div>';
+
+  if(everything){
+    /* the stage's whole night, with your people marked where they are going */
+    const byName={};
+    picks.forEach(p=>{ byName[p.r[1]]=p; });
+    h+='<div class="lineup">';
+    all.forEach(r=>{
+      const p=byName[r[1]], nowOn=on&&on.r[1]===r[1];
+      const names=p?p.who.map(x=>esc(x.name||"Someone")).join(", "):"";
+      const sub=p?((p.meToo?"you":"")+(p.meToo&&names?" \u00b7 ":"")+names):"";
+      h+='<div class="row'+(nowOn?" nowrow":"")+'"><b>'+sh(T(r[2]))+'</b><span class="s'+(p&&p.meToo?" shared":"")+'">'+
+         (p&&p.meToo?"\u2605 ":"")+esc(r[1])+(r[4]?" "+esc(r[4]):"")+
+         '<small>'+(nowOn?"on now":"")+(nowOn&&sub?" \u00b7 ":"")+sub+'</small></span></div>';
+    });
+    h+='</div>';
+  }else if(!picks.length){
+    h+='<div class="t3">Nobody you can see has picked anything here. Tap <b>Everything</b> for the full lineup.</div>';
   }else{
     h+='<div class="lineup">';
     picks.forEach(p=>{
       const names=p.who.map(x=>esc(x.name||"Someone")).join(", ");
-      h+='<div class="row"><b>'+sh(T(p.r[2]))+'</b><span class="s">'+esc(p.r[1])+(p.r[4]?" "+esc(p.r[4]):"")+
-         '<small>'+(p.meToo?"you":"")+(p.meToo&&names?" &middot; ":"")+(names||"")+'</small></span></div>';
+      const nowOn=on&&on.r[1]===p.r[1];
+      h+='<div class="row'+(nowOn?" nowrow":"")+'"><b>'+sh(T(p.r[2]))+'</b><span class="s">'+esc(p.r[1])+(p.r[4]?" "+esc(p.r[4]):"")+
+         '<small>'+(p.meToo?"you":"")+(p.meToo&&names?" \u00b7 ":"")+(names||"")+'</small></span></div>';
     });
     h+='</div>';
   }
@@ -1756,6 +1784,7 @@ document.getElementById("sheet").addEventListener("click",e=>{
   if(chip){ openPerson(chip.dataset.pid); return; }
   const b=e.target.closest("button"); if(!b)return;
   if(b.dataset.close){closeSheet();return;}
+  if(b.dataset.smode){ stageMode=b.dataset.smode; if(stageOpen)openStage(stageOpen); return; }
   if(b.dataset.drop){
     if(!b.dataset.armed){
       b.dataset.armed="1"; b.textContent="Tap again to remove";
