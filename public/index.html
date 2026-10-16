@@ -200,6 +200,12 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .spot .cell i{width:11px;height:11px;display:block}
 .spot .cell b{font-family:var(--ui);font-size:9px;font-weight:800}
 .spotfoot{font-size:11.5px;opacity:.7;margin-top:5px;text-align:center}
+.movedtag{position:absolute;right:3px;top:2px;font-size:9px;font-weight:800;line-height:1;
+  background:#F2A03D;color:#14121A;border-radius:3px;padding:2px 3px}
+.blk.moved{box-shadow:0 0 0 2px #F2A03D inset}
+.blk.livehere.moved{box-shadow:0 0 0 2px #E3112A inset}
+.changedline{background:#F2A03D;color:#14121A;border:2px solid var(--ink);border-radius:7px;
+  padding:8px 10px;margin:10px 0 0;font-size:13px;line-height:1.35}
 .livebadge{position:absolute;left:3px;bottom:2px;font-family:var(--ui);font-size:7.5px;font-weight:800;
   background:#0C0A14;color:#fff;border-radius:3px;padding:1px 4px;letter-spacing:.02em}
 .livebadge.fire{background:#E3112A}
@@ -370,6 +376,15 @@ function fmt(t){const tot=t+960,h24=Math.floor(tot/60)%24,m=tot%60;
 function sh(t){return fmt(t).replace(" ","").toLowerCase();}
 
 
+/* What moved in the official set-times update of 16 Oct 2026, keyed like
+   picks. Keep these in step with the schedule above when it changes again. */
+const CHANGED={
+  "sat|Charlotte de Witte":"Moved earlier. Was 2:45am\u20134:00am, now 1:30am\u20132:45am, straight after VTSS.",
+  "sat|999999999":"Moved later. Was 1:30am\u20132:45am, now closing RC95 at 2:45am\u20134:00am.",
+  "fri|Miguelle & Tons":"Saraga is off this B2B. Same slot."
+};
+const CHANGED_ON="16 Oct";
+
 /* ===== site map ===== */
 /* Positions traced from the official festival map: five blocks running from
    the entrance at the bottom up to the Mind Melt block at the top right.
@@ -431,7 +446,7 @@ const FRI=[
 ["Isotropic","Fiin","4:00pm","5:15pm"],["Isotropic","Daizy","5:15pm","6:30pm"],
 ["Isotropic","Maher Daniel","6:30pm","8:00pm","B2B Mai Iachetti"],
 ["Isotropic","Malóne Morez","8:00pm","9:30pm","B2B Miluhska"],
-["Isotropic","Miguelle & Tons","9:30pm","11:00pm","B2B Saraga"],
+["Isotropic","Miguelle & Tons","9:30pm","11:00pm"],
 ["Isotropic","Brunello","11:00pm","12:30am","B2B Rafael"],
 ["Isotropic","Ahmed Spins","12:30am","2:00am","B2B OMRI."],
 ["Isotropic","Vintage Culture","2:00am","4:00am","B2B Max Styler"],
@@ -506,8 +521,8 @@ const SAT=[
 ["RC95","Cole Knight","6:15pm","7:30pm","B2B DREYA V"],
 ["RC95","Coffintexts","7:30pm","8:45pm","B2B DJ Fuckoff"],["RC95","Nick León","8:45pm","10:00pm"],
 ["RC95","KI/KI","10:00pm","11:15pm"],["RC95","¥ØU$UK€ ¥UKIMAT$U","11:15pm","12:30am"],
-["RC95","VTSS","12:30am","1:30am"],["RC95","999999999","1:30am","2:45am","live"],
-["RC95","Charlotte de Witte","2:45am","4:00am"],
+["RC95","VTSS","12:30am","1:30am"],["RC95","Charlotte de Witte","1:30am","2:45am"],
+["RC95","999999999","2:45am","4:00am","live"],
 ["444","Willikens & Ivkovic","4:00pm","8:00pm"],["444","Red Axes","8:00pm","12:00am"],["444","Seth Troxler","12:00am","4:00am"],
 ["S3QUENC3","Grant Sabadash","4:00pm","5:45pm","B2B Shir Miya"],
 ["S3QUENC3","Natalia Roth","5:45pm","7:15pm","B2B Max Stern"],["S3QUENC3","Rebolledo","7:15pm","8:30pm"],
@@ -583,8 +598,8 @@ const NOTE={
 "fri|Honey Dijon":"Closing S3QUENC3. She goes considerably harder late than her reputation suggests.",
 "sat|horsegiirL":"The pig-mask bit is thin. Underneath it the sets are competent bouncy house. Go for the room, not the music.",
 "sat|Underworld":"The legacy live act that still actually plays. Born Slippy in a Miami warehouse is a real moment.",
-"sat|999999999":"Hardest thing on the bill and it is not close. Live acid hardware past 150, closer to Funk Tribu than to de Witte.",
-"sat|Charlotte de Witte":"Her festival hour has gotten more melodic over the last two years. Still the right closer, just temper it against the 2021 version.",
+"sat|999999999":"Hardest thing on the bill and it is not close. Live acid hardware past 150, closer to Funk Tribu than to de Witte. Now closing RC95 instead of de Witte.",
+"sat|Charlotte de Witte":"Her festival hour has gotten more melodic over the last two years. Temper it against the 2021 version. No longer the closer after the time swap.",
 "sat|VTSS":"Faster and more chaotic than de Witte, and the closest this bill gets to a Sara Landry energy level."};
 
 /* ============================================================
@@ -727,7 +742,7 @@ const INFO={
 "fri|Shanti Celeste":"B2B with Peach. Bright, bubbly, breaks-inflected selector house. Skilled, rarely hard.",
 "fri|Ahmed Spins":"B2B with OMRI. Afro house, mid-tempo, spiritual pacing. Well made and slow.",
 "fri|Maher Daniel":"B2B with Mai Iachetti. Miami house regulars, dependable groove, below your peak-time bar.",
-"fri|Miguelle & Tons":"B2B with Saraga. Mid-tempo melodic house. Filler unless you are already in the room.",
+"fri|Miguelle & Tons":"Mid-tempo melodic house. Filler unless you are already in the room. Saraga is off this one now.",
 "fri|Brunello":"B2B with Rafael. Latin-leaning melodic house. Pleasant, not hard.",
 "fri|Moscoman":"Disco Halal boss. Post-punk instincts in dance music, groovy but mid-tempo.",
 "fri|Bill Patrick":"B2B with Bort. Veteran selectors, long-form and slow-building. Not your tempo.",
@@ -842,16 +857,18 @@ function renderGrid(){
     rows.filter(r=>r[0]===st).forEach(r=>{
       const key=k(day,r[1]), s=T(r[2]), e=T(r[3]);
       const isMine=mine.has(key), isRec=!!REC[key], hasNote=!!(REC[key]||NOTE[key]||INFO[key]), cw=crewFor(key);
-      const hereNow=liveAt(key,NOW);
+      const hereNow=liveAt(key,NOW), moved=!!CHANGED[key];
       const cls=["blk"];
       if(dark)cls.push("ink");
       if(st==="Grand Central")cls.push("dash");
       if(isMine)cls.push("mine"); else if(hasNote)cls.push("rec");
       if(onGrid(key))cls.push("on");
       if(hereNow.length)cls.push("livehere");
+      if(moved)cls.push("moved");
       h+=`<button class="${cls.join(" ")}" data-n="${esc(r[1])}" style="background:${st==="Grand Central"?"rgba(246,205,166,.75)":c};top:${s*PPM+PAD}px;height:${(e-s)*PPM-3}px">`;
       if(cs.has(r[1]))h+=`<span class="cl"></span>`;
       if(isMine)h+=`<span class="star">&#9733;</span>`; else if(isRec)h+=`<span class="star pickdot">&#9679;</span>`;
+      if(moved)h+=`<span class="movedtag" title="Time changed">\u21BB</span>`;
       if(hereNow.length){
         const fire=hereNow.some(p=>p.at.fire);
         h+=`<span class="livebadge${fire?" fire":""}">${fire?"\u25B2 ":""}${hereNow.length} here</span>`;
@@ -890,7 +907,7 @@ function renderPanels(){
       `<i class="mk runmk mk-${shapeFor(p.board)}" style="background:${colorFor(p.person)}" title="${esc(p.name||"Someone")}"></i>`).join("");
     h+=`<div class="row runrow" data-run="${esc(r[1])}" role="button" tabindex="0">`+
        `<b>${sh(T(r[2]))}</b><span class="s">${esc(r[1])}${r[4]?" "+esc(r[4]):""}`+
-       `<small>${esc(r[0])}${cs.has(r[1])?" \u00b7 clash":""}</small>`+
+       `<small>${esc(r[0])}${cs.has(r[1])?" \u00b7 clash":""}${CHANGED[k(day,r[1])]?" \u00b7 \u21BB time changed":""}</small>`+
        (cw.length?`<span class="runwith">${marks}${cw.length>6?"+"+(cw.length-6):""}</span>`:"")+
        `</span></div>`;
   });
@@ -973,6 +990,7 @@ function openSheet(name){
   const cw=crewFor(key);
   let h=`<h3>${esc(name)}${r[4]?" "+esc(r[4]):""}</h3>
     <div class="meta">${esc(r[0])} &middot; ${fmt(T(r[2]))} &ndash; ${fmt(T(r[3]))}</div>`;
+  if(CHANGED[key])h+=`<p class="changedline"><b>\u21BB Changed ${esc(CHANGED_ON)}.</b> ${esc(CHANGED[key])}</p>`;
   if(why)h+=`<p>${esc(why)}</p>`;
   if(cl.length)h+=`<p class="warnline">Clashes with ${cl.map(c=>esc(c.a[1]===name?c.b[1]:c.a[1])).join(", ")}.</p>`;
   h+=`<div class="acts">
