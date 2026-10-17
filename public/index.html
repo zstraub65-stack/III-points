@@ -212,6 +212,22 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 .blk.livehere{box-shadow:0 0 0 2px #E3112A inset}
 .nowline{position:absolute;left:0;right:0;border-top:2px solid #E3112A;pointer-events:none;z-index:7}
 .nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:#E3112A}
+#rallyPanel{margin:12px 16px 0}
+#rallyBar{margin:0}
+.rallystrip{display:flex;align-items:center;gap:7px;width:100%;text-align:left;
+  background:#F2A03D;color:#14121A;border:0;border-bottom:2px solid var(--ink);
+  padding:9px 16px;font-family:var(--ui);font-size:13px;font-weight:700;cursor:pointer}
+.rallystrip.soonish{background:#E3112A;color:#fff}
+.rallystrip b{font-family:var(--disp);letter-spacing:.06em}
+.rallystrip .rc{margin-left:auto;background:rgba(0,0,0,.22);border-radius:20px;padding:2px 8px;font-size:11px;white-space:nowrap}
+.rallybig{background:var(--ink);color:var(--rail);border-radius:9px;padding:13px;margin:11px 0 9px;text-align:center}
+.rallybig .rw{font-family:var(--disp);font-size:21px;line-height:1.1}
+.rallybig .rt{font-family:var(--ui);font-size:14px;font-weight:700;margin-top:5px}
+.rallybig .rn{font-size:12.5px;opacity:.85;margin-top:6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chips button{font-family:var(--ui);font-size:11px;font-weight:700;padding:5px 8px;
+  border:2px solid var(--ink);border-radius:20px;background:transparent;cursor:pointer;color:inherit}
+.chips button:hover{background:var(--ink);color:var(--rail)}
 #mapPanel{margin:12px 16px 0}
 .mapimg{position:relative;margin:10px 0 4px;line-height:0}
 .mapimg img{display:block;width:100%;height:auto;border-radius:7px;border:2px solid var(--ink)}
@@ -287,6 +303,7 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <button class="tg" id="fMine" aria-pressed="false">Mine</button>
     <button class="tg" id="fCrew" aria-pressed="false">Crew</button>
     <span class="grow"></span>
+    <button class="tg" id="rallyBtn" aria-pressed="false">Rally</button>
     <button class="tg" id="mapBtn" aria-pressed="false">Map</button>
     <button class="tg" id="nowBtn" aria-pressed="false">Now</button>
     <button class="tg" id="helpBtn" aria-pressed="false" aria-label="How to use this">?</button>
@@ -295,10 +312,12 @@ body.night #setup code{background:rgba(255,255,255,.1)}
     <div class="who" id="who">Loading the board…</div>
   </div>
 
+  <div id="rallyBar" hidden></div>
   <div id="setup" hidden></div>
   <div id="welcome" hidden></div>
   <div id="nowPanel" hidden></div>
   <div id="mapPanel" hidden></div>
+  <div id="rallyPanel" hidden></div>
   <div id="helpPanel" hidden></div>
 
   <div id="scroll"><div id="grid"></div></div>
@@ -1195,10 +1214,11 @@ async function pull(){
       const j=await r.json().catch(()=>({}));
       if(j&&j.error==="kv_not_bound"){ const e=new Error("kv"); e.kv=true; throw e; }
       if(!r.ok)throw new Error("http "+r.status);
+      if(b===BOARD)rally=j.rally||null;   // only your own crew's rally
       return (j.people||[]).map(p=>({
         board:b, person:p.person, name:p.name||"",
         sets:new Set(Array.isArray(p.sets)?p.sets:[]),
-        at:p.at||null
+        at:p.at||null, ack:p.ack||0
       }));
     }));
     hideSetup();
@@ -1511,6 +1531,132 @@ function openStage(stage){
   });
 }
 
+/* A rally is worth showing from 2 hours before until 45 minutes after. */
+function rallyLive(){
+  if(!rally||!rally.when)return false;
+  const d=rally.when-Date.now();
+  return d<2*60*60000 && d>-45*60000;
+}
+function rallyIn(){
+  const m=Math.round((rally.when-Date.now())/60000);
+  if(m>90)return "at "+clockOf(rally.when);
+  if(m>1)return "in "+m+" min";
+  if(m>=-1)return "now";
+  return Math.abs(m)+" min ago";
+}
+function clockOf(ms){
+  const d=new Date(ms); let h=d.getHours(); const mi=String(d.getMinutes()).padStart(2,"0");
+  const ap=h>=12?"pm":"am"; h=h%12||12; return h+":"+mi+ap;
+}
+/* Who said they were in, for this rally rather than an older one. */
+function rallyIns(){
+  if(!rally)return [];
+  return people.filter(p=>p.board===BOARD&&p.ack&&Math.abs(p.ack-rally.t)<1000);
+}
+function iAmIn(){ return rallyIns().some(p=>p.person===PID); }
+
+function renderRallyBar(){
+  const el=document.getElementById("rallyBar");
+  if(!el)return;
+  if(!rallyLive()){ el.hidden=true; el.innerHTML=""; return; }
+  el.hidden=false;
+  const ins=rallyIns().length;
+  el.innerHTML='<button class="rallystrip'+(rally.when-Date.now()<10*60000?" soonish":"")+'" id="rallyGo">'+
+    '<b>MEET</b> '+esc(rally.where)+' \u00b7 '+esc(rallyIn())+
+    (rally.note?' \u00b7 '+esc(rally.note):'')+
+    '<span class="rc">'+ins+' in</span></button>';
+}
+
+function renderRally(){
+  const el=document.getElementById("rallyPanel");
+  if(!el||el.hidden)return;
+  let h='<div class="card"><div class="whead"><span class="t1">Rally point</span>'+
+        '<button class="wx" id="rallyClose" aria-label="Close">&times;</button></div>';
+
+  if(rally&&rally.when){
+    const ins=rallyIns();
+    h+='<div class="rallybig"><div class="rw">'+esc(rally.where)+'</div>'+
+       '<div class="rt">'+esc(clockOf(rally.when))+' \u00b7 '+esc(rallyIn())+'</div>'+
+       (rally.note?'<div class="rn">'+esc(rally.note)+'</div>':'')+'</div>';
+    h+='<div class="t2">Set by '+esc(rally.byName||"someone")+'</div>';
+    h+='<div class="tools" style="margin:11px 0 0">'+
+       '<button class="'+(iAmIn()?"fill":"")+'" id="rallyIn">'+(iAmIn()?"You are in \u2713":"I'm in")+'</button>'+
+       '<button id="rallyEdit">Change</button><button id="rallyClear">Call it off</button></div>';
+    h+='<div class="t1" style="margin-top:14px">'+ins.length+(ins.length===1?" person in":" people in")+'</div>';
+    h+='<div class="goin" id="rallyWho"></div>';
+  }else{
+    h+='<div class="t3">Agree one place and time. Everyone on '+esc(BOARD)+' sees it at the top of their screen, so nobody has to be checked in or watching the chat.</div>';
+  }
+
+  if(!rally||!rally.when||rallyEditing){
+    h+='<div class="t1" style="margin-top:15px">Where</div>'+
+       '<div class="chips" id="rallyWhere">'+
+       ["Entrance","Main bar","Food trucks","Restrooms"].concat(Object.keys(ST))
+         .map(x=>'<button data-where="'+esc(x)+'">'+esc(x)+'</button>').join("")+'</div>'+
+       '<input id="rWhere" class="fld" maxlength="40" placeholder="or type a spot" value="'+esc(rallyEditing&&rally?rally.where:"")+'">'+
+       '<div class="t1" style="margin-top:13px">When</div>'+
+       '<div class="chips" id="rallyWhen">'+
+       [15,30,45,60,90].map(m=>'<button data-mins="'+m+'">in '+m+' min</button>').join("")+'</div>'+
+       '<input id="rWhen" class="fld" type="time" value="">'+
+       '<input id="rNote" class="fld" maxlength="60" placeholder="optional note, e.g. by the tiger" value="'+esc(rallyEditing&&rally?(rally.note||""):"")+'">'+
+       '<div class="tools" style="margin:11px 0 0"><button class="fill" id="rallySet">'+(rally&&rally.when?"Update the rally":"Set the rally")+'</button>'+
+       (rallyEditing?'<button id="rallyCancel">Cancel</button>':'')+'</div>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+
+  const box=document.getElementById("rallyWho");
+  if(box)rallyIns().forEach(p=>{
+    const sp=document.createElement("span");
+    sp.dataset.pid=p.person; sp.style.cursor="pointer";
+    const dot=document.createElement("span");
+    dot.className="dot mk-"+shapeFor(p.board); dot.style.background=colorFor(p.person);
+    const t=document.createElement("em"); t.style.fontStyle="normal";
+    t.textContent=(p.person===PID?"You":(p.name||"Someone"));
+    sp.append(dot,t); box.appendChild(sp);
+  });
+}
+let rallyEditing=false;
+
+function syncRallyBtn(){
+  const b=document.getElementById("rallyBtn"), p=document.getElementById("rallyPanel");
+  if(b&&p)b.setAttribute("aria-pressed",String(!p.hidden));
+}
+function toggleRally(){
+  const p=document.getElementById("rallyPanel");
+  if(!p)return;
+  p.hidden=!p.hidden;
+  if(!p.hidden){ renderRally(); p.scrollIntoView&&p.scrollIntoView({block:"nearest"}); }
+  else { p.innerHTML=""; rallyEditing=false; }
+  syncRallyBtn();
+}
+
+async function postRally(r){
+  if(!configured())return;
+  try{
+    const res=await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({person:PID,rally:r})});
+    if(!res.ok)throw new Error("http "+res.status);
+    rally=(await res.json().catch(()=>({}))).rally||null;
+    rallyEditing=false;
+    draw(); renderRally();
+    toast(r?"Rally set. Everyone on "+BOARD+" can see it.":"Rally called off");
+  }catch(e){ toast("Could not reach the crew"); }
+}
+async function postAck(on){
+  if(!configured()||!rally)return;
+  const me=people.find(p=>p.person===PID);
+  if(me)me.ack=on?rally.t:0;     /* show it immediately */
+  draw(); renderRally();
+  try{
+    await fetch(API+"/picks?board="+encodeURIComponent(BOARD),{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({person:PID,ack:on?rally.t:0})});
+    pull();
+  }catch(e){ toast("Saved here, will send when you are back on."); }
+}
+
 function renderHelp(){
   const el=document.getElementById("helpPanel");
   if(!el||el.hidden)return;
@@ -1711,6 +1857,7 @@ async function checkIn(key,fire,opts){
 }
 /* a check-in made with no signal is retried on the next successful contact */
 let pendingAt=null;
+let rally=null;   // {where,when,note,by,byName,t} for this crew, or null
 async function flushPending(){
   if(!pendingAt||!configured()||hasLeft())return;
   const at=pendingAt.clear?null:pendingAt;
@@ -1861,6 +2008,36 @@ document.getElementById("crew").addEventListener("keydown",e=>{
 document.getElementById("nowBtn").addEventListener("click",toggleNow);
 document.getElementById("helpBtn").addEventListener("click",toggleHelp);
 document.getElementById("mapBtn").addEventListener("click",toggleMap);
+document.getElementById("rallyBtn").addEventListener("click",toggleRally);
+document.getElementById("rallyBar").addEventListener("click",e=>{
+  if(e.target.closest("#rallyGo")){ const p=document.getElementById("rallyPanel"); if(p.hidden)toggleRally(); }
+});
+document.getElementById("rallyPanel").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b)return;
+  if(b.id==="rallyClose"){ toggleRally(); return; }
+  if(b.id==="rallyIn"){ postAck(!iAmIn()); return; }
+  if(b.id==="rallyEdit"){ rallyEditing=true; renderRally(); return; }
+  if(b.id==="rallyCancel"){ rallyEditing=false; renderRally(); return; }
+  if(b.id==="rallyClear"){ postRally(null); return; }
+  if(b.dataset.where!==undefined){ document.getElementById("rWhere").value=b.dataset.where; return; }
+  if(b.dataset.mins!==undefined){
+    const when=Date.now()+Number(b.dataset.mins)*60000;
+    const d=new Date(when);
+    document.getElementById("rWhen").value=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+    return;
+  }
+  if(b.id==="rallySet"){
+    const where=document.getElementById("rWhere").value.trim();
+    const hhmm=document.getElementById("rWhen").value;
+    if(!where){ toast("Say where"); return; }
+    if(!hhmm){ toast("Say when"); return; }
+    /* a time earlier than now means tonight's small hours, not this morning */
+    const [hh,mm]=hhmm.split(":").map(Number);
+    const d=new Date(); d.setHours(hh,mm,0,0);
+    if(d.getTime()<Date.now()-60*60000)d.setDate(d.getDate()+1);
+    postRally({where,when:d.getTime(),note:document.getElementById("rNote").value.trim(),byName:myName});
+  }
+});
 const mapTap=e=>{
   if(e.target.closest("#mapClose")){ toggleMap(); return; }
   const g=e.target.closest("[data-stage]");
@@ -1979,7 +2156,7 @@ document.getElementById("leaveBtn").addEventListener("click",async e=>{
 });
 window.addEventListener("hashchange",()=>location.reload());
 
-function draw(){renderGrid();renderPanels();renderNow();renderMap();statusLine();}
+function draw(){renderGrid();renderPanels();renderNow();renderMap();renderRallyBar();statusLine();}
 
 /* ===== boot ===== */
 /* Look for the official map once. Until we know, the drawn fallback shows. */

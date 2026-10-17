@@ -54,7 +54,7 @@ async function readBoard(env, board) {
 
 function asList(agg) {
   return Object.entries(agg.people || {})
-    .map(([person, v]) => ({ person, name: v.name || "", sets: v.sets || [], at: v.at || null, updated: v.updated || 0 }))
+    .map(([person, v]) => ({ person, name: v.name || "", sets: v.sets || [], at: v.at || null, ack: v.ack || 0, updated: v.updated || 0 }))
     .sort((a, b) => (a.updated || 0) - (b.updated || 0));
 }
 
@@ -66,7 +66,7 @@ async function handlePicks(request, env, url) {
 
   if (request.method === "GET") {
     const agg = await readBoard(env, board);
-    return json({ board, people: asList(agg) });
+    return json({ board, people: asList(agg), rally: agg.rally || null });
   }
 
   if (request.method === "POST") {
@@ -114,8 +114,33 @@ async function handlePicks(request, env, url) {
     // Anyone who left stays gone, whatever their browser tries to send.
     if (agg.gone[person]) return json({ ok: true, blocked: true });
 
+    // A rally belongs to the board, not to whoever set it. One at a time:
+    // setting a new one replaces the old, and null clears it.
+    if ("rally" in body) {
+      const r = body.rally;
+      const clean2 = (v, max) => String(v == null ? "" : v).replace(/[\u0000-\u001F<>]/g, "").trim().slice(0, max);
+      if (r && (r.where || r.when)) {
+        agg.rally = {
+          where: clean2(r.where, 40),
+          when: Number(r.when) || 0,          // epoch ms of the meeting time
+          note: clean2(r.note, 60),
+          by: person,
+          byName: clean2(r.byName, 24),
+          t: Date.now()
+        };
+      } else {
+        agg.rally = null;
+      }
+      await env.PICKS.put(keyFor(board), JSON.stringify(agg), { expirationTtl: TTL });
+      return json({ ok: true, rally: agg.rally });
+    }
+
     const prev = agg.people[person] || {};
-    const next = { name: prev.name || "", sets: prev.sets || [], at: prev.at || null };
+    const next = { name: prev.name || "", sets: prev.sets || [], at: prev.at || null, ack: prev.ack || 0 };
+
+    // ack is the t of the rally this person said they were in for, so an old
+    // acknowledgement does not count towards a newer rally.
+    if ("ack" in body) next.ack = Number(body.ack) || 0;
 
     // Names are typed by whoever opens the link. Stored as plain text; the page
     // renders them with textContent and never as markup.
