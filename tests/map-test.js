@@ -7,20 +7,20 @@ const PAGE = path.join(ROOT, "public", "index.html");
 const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
-const DOORS_FRI = Date.UTC(2026, 9, 16, 20, 0, 0);
-const fri = (h, m) => DOORS_FRI + ((h - 16) * 60 + m) * 60000;
-let CLOCK = fri(23, 30);                       // Hamdi on RC95 runs 11:15pm-12:15am
+const DOORS_FRI = Date.UTC(2026, 10, 6, 18, 0, 0);
+const fri = (h, m) => DOORS_FRI + ((h - 13) * 60 + m) * 60000;
+let CLOCK = fri(22, 0);                        // Levity on Circuit Grounds runs 9:35-10:45pm
 
 const people = [
-  { person: "zack", name: "Zack", sets: ["fri|Hamdi"], at: null },
-  { person: "v", name: "Vrushi", sets: ["fri|Hamdi"], at: { s: "fri|Hamdi", t: fri(23, 20), fire: false } },
-  { person: "s", name: "Sumit", sets: ["fri|Hamdi"], at: null },
-  { person: "n", name: "Nicolas", sets: [], at: { s: "fri|Cloonee", t: fri(23, 35), fire: true } }
+  { person: "zack", name: "Zack", sets: ["fri|Levity"], at: null },
+  { person: "v", name: "Vrushi", sets: ["fri|Levity"], at: { s: "fri|Levity", t: fri(23, 20), fire: false } },
+  { person: "s", name: "Sumit", sets: ["fri|Levity"], at: null },
+  { person: "n", name: "Nicolas", sets: [], at: { s: "fri|Mau P", t: fri(23, 35), fire: true } }
 ];
 const vc = new VirtualConsole(); vc.sendTo(console, { omitJSDOMErrors: true });
 const dom = new JSDOM(html, {
   virtualConsole: vc, runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     const R = w.Date;
     w.Date = class extends R {
@@ -30,12 +30,12 @@ const dom = new JSDOM(html, {
     };
     w.fetch = (u, o) => o && o.method === "POST"
       ? Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) })
-      : Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "miamiii", people }) });
+      : Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "edc", people }) });
     try {
       w.localStorage.clear();
-      w.localStorage.setItem("iiip26-pid", "zack");
-      w.localStorage.setItem("iiip26-welcomed", "1");
-      w.localStorage.setItem("iiip26-mine", JSON.stringify(["fri|Hamdi"]));
+      w.localStorage.setItem("edc26-pid", "zack");
+      w.localStorage.setItem("edc26-welcomed", "1");
+      w.localStorage.setItem("edc26-mine", JSON.stringify(["fri|Levity"]));
     } catch (e) {}
   }
 });
@@ -58,23 +58,22 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   await wait(100);
   ck("opens", d.getElementById("mapPanel").hidden, false);
 
-  console.log("\n=== the drawing");
+  console.log("\n=== the stage list, since EDC has no site plan loaded");
   const drawn = [...d.querySelectorAll("#mapPanel [data-stage]")].map(g => g.dataset.stage).sort();
   const stages = Object.keys(w.eval("ST")).sort();
   ck("every stage is on it", drawn, stages);
-  ck("entrance is marked", /ENTRANCE/.test(d.getElementById("mapSvg").textContent), true);
-  ck("RC95 flags your pick", !!stage("RC95").querySelector("text"), true);
-  ck("RC95 shows a live count", stage("RC95").querySelector("circle").nextSibling.textContent, "1");
-  ck("and is outlined as hot", stage("RC95").querySelector("rect").classList.contains("hot"), true);
-  ck("a quiet stage has no count", !!stage("Vertex").querySelector("circle"), false);
+  ck("Circuit Grounds flags your pick", !!stage("Circuit Grounds").querySelector(".sr"), true);
+  ck("Circuit Grounds shows a live count", stage("Circuit Grounds").querySelector(".sn").textContent, "1 here");
+  ck("says the map is not loaded", /No site map loaded for EDC ORLANDO/.test(d.getElementById("mapPanel").textContent), true);
+  ck("a quiet stage has no count", !!stage("Neon Garden").querySelector(".sn"), false);
 
   console.log("\n=== tapping a stage");
-  stage("RC95").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  stage("Circuit Grounds").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
   const sheet = d.getElementById("sheet");
   ck("sheet opens", sheet.classList.contains("on"), true);
-  ck("named", /RC95/.test(sheet.textContent), true);
-  ck("says what is on now", /Hamdi/.test(sheet.textContent) && /On now/.test(sheet.textContent), true);
+  ck("named", /Circuit Grounds/.test(sheet.textContent), true);
+  ck("says what is on now", /Levity/.test(sheet.textContent) && /On now/.test(sheet.textContent), true);
   ck("lists who is standing there", /Vrushi/.test(sheet.textContent), true);
   ck("lists who is down for what", /you/.test(sheet.textContent) && /Sumit/.test(sheet.textContent), true);
   ck("not someone at another stage", /Nicolas/.test(sheet.textContent), false);
@@ -82,17 +81,17 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   await wait(80);
 
   console.log("\n=== a stage with nobody on it");
-  stage("Vertex").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  stage("Neon Garden").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
-  ck("still opens", /Vertex/.test(d.getElementById("sheet").textContent), true);
+  ck("still opens", /Neon Garden/.test(d.getElementById("sheet").textContent), true);
   ck("says nobody is there", /Nobody from your crews/.test(d.getElementById("sheet").textContent), true);
   d.querySelector("#sheet button[data-close]").click();
   await wait(80);
 
   console.log("\n=== keyboard");
-  stage("Grand Central").dispatchEvent(new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  stage("Kinetic Field").dispatchEvent(new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
   await wait(120);
-  ck("Enter opens a stage", /Grand Central/.test(d.getElementById("sheet").textContent), true);
+  ck("Enter opens a stage", /Kinetic Field/.test(d.getElementById("sheet").textContent), true);
   d.querySelector("#sheet button[data-close]").click();
   await wait(80);
 
@@ -100,12 +99,12 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   CLOCK = Date.UTC(2026, 9, 12, 18, 0, 0);
   w.eval("draw()");
   await wait(80);
-  stage("RC95").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  stage("Circuit Grounds").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
   ck("no 'On now' when nothing is on", /On now/.test(d.getElementById("sheet").textContent), false);
-  ck("but picks still listed", /Hamdi/.test(d.getElementById("sheet").textContent), true);
+  ck("but picks still listed", /Levity/.test(d.getElementById("sheet").textContent), true);
   d.querySelector("#sheet button[data-close]").click();
-  CLOCK = fri(23, 30);
+  CLOCK = fri(22, 0);                          // back inside Levity, as the sections below assume
 
   console.log("\n=== closing");
   ck("still open from earlier", d.getElementById("mapPanel").hidden, false);
@@ -118,10 +117,10 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
 
   console.log("\n=== the whole lineup toggle");
   d.getElementById("mapBtn").click(); await wait(100);   // reopen, the last section closed it
-  stage("Sector 3").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  stage("Stereo Bloom").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
   let sh = d.getElementById("sheet");
-  const total = w.eval("setsAt('Sector 3').length");
+  const total = w.eval("setsAt('Stereo Bloom').length");
   ck("defaults to your crew", sh.querySelector('[data-smode="crew"]').getAttribute("aria-pressed"), "true");
   ck("nobody picked anything there", /Nobody you can see has picked/.test(sh.textContent), true);
   ck("so no rows yet", sh.querySelectorAll(".lineup .row").length, 0);
@@ -131,8 +130,8 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   sh = d.getElementById("sheet");
   ck("switches to everything", sh.querySelector('[data-smode="all"]').getAttribute("aria-pressed"), "true");
   ck("lists the stage's whole night", sh.querySelectorAll(".lineup .row").length, total);
-  ck("more than a couple of sets", total > 10, true);
-  ck("still the same stage", /Sector 3/.test(sh.textContent), true);
+  ck("a real lineup, not a couple of rows", total > 5, true);
+  ck("still the same stage", /Stereo Bloom/.test(sh.textContent), true);
 
   sh.querySelector('[data-smode="crew"]').click();
   await wait(120);
@@ -140,7 +139,7 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
 
   console.log("\n=== a stage where your crew is going");
   d.querySelector("#sheet button[data-close]").click(); await wait(60);
-  stage("RC95").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  stage("Circuit Grounds").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
   sh = d.getElementById("sheet");
   ck("crew view shows just the picked set", sh.querySelectorAll(".lineup .row").length, 1);
@@ -148,48 +147,46 @@ const stage = n => [...d.querySelectorAll("#mapPanel [data-stage]")].find(g => g
   sh.querySelector('[data-smode="all"]').click();
   await wait(120);
   sh = d.getElementById("sheet");
-  const rc95 = w.eval("setsAt('RC95').length");
-  ck("everything shows the full RC95 night", sh.querySelectorAll(".lineup .row").length, rc95);
+  const rc95 = w.eval("setsAt('Circuit Grounds').length");
+  ck("everything shows the full Circuit Grounds night", sh.querySelectorAll(".lineup .row").length, rc95);
   ck("your pick is starred in it", /\u2605/.test(sh.textContent), true);
   ck("names carried over", /Vrushi/.test(sh.textContent), true);
   ck("what is on is still marked", sh.querySelectorAll(".lineup .row.nowrow").length, 1);
 
   console.log("\n=== the choice sticks while browsing");
   d.querySelector("#sheet button[data-close]").click(); await wait(60);
-  stage("Vertex").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  stage("Neon Garden").dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
   ck("opens straight into everything", d.getElementById("sheet").querySelector('[data-smode="all"]').getAttribute("aria-pressed"), "true");
   d.getElementById("sheet").querySelector('[data-smode="crew"]').click(); await wait(100);
   d.querySelector("#sheet button[data-close]").click(); await wait(60);
   d.getElementById("mapClose").click(); await wait(60);   // leave it shut, as the next section expects
 
-  console.log("\n=== with the official map present");
-  // the page probes for map.jpg; pretend it loaded
+  console.log("\n=== an image alone is not enough");
   d.getElementById("mapBtn").click(); await wait(60);        // open
-  w.eval("MAP_SRC='map.jpeg';mapImgOK=true;renderMap()");   // whatever name the phone used
+  w.eval("MAP_SRC='map.jpeg';mapImgOK=true;renderMap()");    // pretend a map file loaded
+  await wait(80);
+  ck("no image without stage coordinates", !!d.querySelector(".mapimg img"), false);
+  ck("still the stage list", d.querySelectorAll("#mapPanel .stagerow").length, 4);
+
+  console.log("\n=== once somebody places the stages on it");
+  w.eval("Object.assign(MAPIMG,{'Kinetic Field':[0.3,0.3],'Circuit Grounds':[0.7,0.3],'Neon Garden':[0.3,0.7],'Stereo Bloom':[0.7,0.7]});renderMap()");
   await wait(80);
   ck("shows the image", !!d.querySelector(".mapimg img"), true);
   ck("uses the name that actually loaded", d.querySelector(".mapimg img").getAttribute("src"), "map.jpeg");
-  ck("drops the drawn fallback", !!d.getElementById("mapSvg"), false);
   const hits = [...d.querySelectorAll(".mapimg .hit")].map(b => b.dataset.stage).sort();
   ck("a tap target per stage", hits, Object.keys(w.eval("ST")).sort());
-  const rc = [...d.querySelectorAll(".mapimg .hit")].find(b => b.dataset.stage === "RC95");
+  const rc = [...d.querySelectorAll(".mapimg .hit")].find(b => b.dataset.stage === "Circuit Grounds");
   ck("positioned, not stacked", rc.style.left !== "" && rc.style.top !== "", true);
   ck("still flags your pick", !!rc.querySelector(".hs"), true);
   ck("still counts who is there", rc.querySelector(".hn").textContent, "1");
-  ck("marked hot", rc.classList.contains("hot"), true);
-  ck("and named for screen readers", /RC95/.test(rc.getAttribute("aria-label")), true);
   rc.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
   await wait(120);
-  ck("tapping it opens the same sheet", /RC95/.test(d.getElementById("sheet").textContent), true);
+  ck("tapping it opens the same sheet", /Circuit Grounds/.test(d.getElementById("sheet").textContent), true);
   d.querySelector("#sheet button[data-close]").click(); await wait(60);
-
-  console.log("\n=== and without it");
-  w.eval("mapImgOK=false;renderMap()");
+  w.eval("Object.keys(MAPIMG).forEach(k=>delete MAPIMG[k]);mapImgOK=false;renderMap()");
   await wait(80);
-  ck("falls back to the drawn map", !!d.getElementById("mapSvg"), true);
-  ck("no broken image", !!d.querySelector(".mapimg img"), false);
-  ck("stages still tappable", d.querySelectorAll("#mapPanel [data-stage]").length, 13);
+  ck("back to the list when neither is there", d.querySelectorAll("#mapPanel .stagerow").length, 4);
 
   console.log(fail.length ? "\n" + fail.length + " FAILURES:\n" + fail.join("\n") : "\nall assertions passed");
   setTimeout(() => dom.window.close(), 100);

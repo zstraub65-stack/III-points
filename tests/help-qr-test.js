@@ -7,16 +7,16 @@ const PAGE = path.join(ROOT, "public", "index.html");
 const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
-const DOORS_FRI = Date.UTC(2026, 9, 16, 20, 0, 0);
-const fri = (h, m) => DOORS_FRI + ((h - 16) * 60 + m) * 60000;
-let CLOCK = fri(23, 30);                       // Hamdi is on
+const DOORS_FRI = Date.UTC(2026, 10, 6, 18, 0, 0);
+const fri = (h, m) => DOORS_FRI + ((h - 13) * 60 + m) * 60000;
+let CLOCK = fri(22, 0);                        // Levity is on, 9:35-10:45pm
 
 const posts = [];
 function boot(hash, seed) {
   const vc = new VirtualConsole(); vc.sendTo(console, { omitJSDOMErrors: true });
   return new JSDOM(html, {
     virtualConsole: vc, runScripts: "dangerously",
-    url: "https://iii-points.zstraub65.workers.dev/" + (hash || "#board=miamiii"),
+    url: "https://iii-points.zstraub65.workers.dev/" + (hash || "#board=edc"),
     beforeParse(w) {
       const R = w.Date;
       w.Date = class extends R {
@@ -35,9 +35,9 @@ function boot(hash, seed) {
           if (body.name !== undefined) row.name = body.name;
           return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
         }
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "miamiii", people: [JSON.parse(JSON.stringify(row))] }) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "edc", people: [JSON.parse(JSON.stringify(row))] }) });
       };
-      try { w.localStorage.clear(); Object.entries(seed || {}).forEach(([k, v]) => w.localStorage.setItem(k, v)); w.localStorage.setItem("iiip26-pid", "zack"); } catch (e) {}
+      try { w.localStorage.clear(); Object.entries(seed || {}).forEach(([k, v]) => w.localStorage.setItem(k, v)); w.localStorage.setItem("edc26-pid", "zack"); } catch (e) {}
     }
   });
 }
@@ -50,7 +50,7 @@ const ck = (label, got, want) => {
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 (async () => {
-  let dom = boot("#board=miamiii", { "iiip26-welcomed": "1" });
+  let dom = boot("#board=edc", { "edc26-welcomed": "1" });
   let w = dom.window, d = w.document;
   await wait(1400);
 
@@ -72,7 +72,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   ck("closes again", d.getElementById("helpPanel").hidden, true);
 
   console.log("\n=== checking in no longer shuts the sheet");
-  d.querySelector('.blk[data-n="Hamdi"]').click();
+  d.querySelector('.blk[data-n="Levity"]').click();
   ck("sheet open", d.getElementById("sheet").classList.contains("on"), true);
   d.querySelector('#sheet button[data-checkin]').click();
   await wait(300);
@@ -90,7 +90,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await wait(120);
   ck("join code drawn", d.querySelectorAll("#qrwrap svg").length, 1);
   ck("start-your-own code drawn", d.querySelectorAll("#qrwrapNew svg").length, 1);
-  ck("join code points at this crew", /#board=miamiii$/.test(d.getElementById("qrUrl").textContent), true);
+  ck("join code points at this crew", /#board=edc$/.test(d.getElementById("qrUrl").textContent), true);
   ck("other code points at #new", /#new$/.test(d.getElementById("qrUrlNew").textContent), true);
   ck("the two differ", d.getElementById("qrUrl").textContent !== d.getElementById("qrUrlNew").textContent, true);
   dom.window.close();
@@ -107,11 +107,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   d.getElementById("wMake").click();
   await wait(400);
   ck("lands on their own crew", w.location.hash, "#board=tampa-crew");
-  ck("with their name kept", w.localStorage.getItem("iiip26-name"), "Dana");
+  ck("with their name kept", w.localStorage.getItem("edc26-name"), "Dana");
   dom.window.close();
 
   console.log("\n=== a returning person is not re-prompted by a plain link");
-  dom = boot("#board=miamiii", { "iiip26-welcomed": "1" }); w = dom.window; d = w.document;
+  dom = boot("#board=edc", { "edc26-welcomed": "1" }); w = dom.window; d = w.document;
   await wait(1400);
   ck("left alone", d.getElementById("welcome").hidden, true);
   dom.window.close();

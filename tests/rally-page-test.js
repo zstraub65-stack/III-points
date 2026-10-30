@@ -6,8 +6,8 @@ const PAGE = path.join(ROOT, "public", "index.html");
 const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
-const DOORS_SAT = Date.UTC(2026, 9, 17, 20, 0, 0);
-const sat = (h, m) => DOORS_SAT + ((h - 16) * 60 + m) * 60000;
+const DOORS_SAT = Date.UTC(2026, 10, 7, 18, 0, 0);
+const sat = (h, m) => DOORS_SAT + ((h - 13) * 60 + m) * 60000;
 let CLOCK = sat(22, 0);                       // 10pm Saturday
 
 let board = { rally: null, people: [
@@ -18,7 +18,7 @@ const posts = [];
 const vc = new VirtualConsole(); vc.sendTo(console, { omitJSDOMErrors: true });
 const dom = new JSDOM(html, {
   virtualConsole: vc, runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     const R = w.Date;
     w.Date = class extends R {
@@ -40,13 +40,13 @@ const dom = new JSDOM(html, {
       }
       const bn = decodeURIComponent(String(u).split("board=")[1] || "");
       return Promise.resolve({ ok: true, json: () => Promise.resolve(
-        bn === "miamiii" ? { board: bn, people: board.people, rally: board.rally } : { board: bn, people: [], rally: null }) });
+        bn === "edc" ? { board: bn, people: board.people, rally: board.rally } : { board: bn, people: [], rally: null }) });
     };
     try {
       w.localStorage.clear();
-      w.localStorage.setItem("iiip26-pid", "zack");
-      w.localStorage.setItem("iiip26-name", "Zack");
-      w.localStorage.setItem("iiip26-welcomed", "1");
+      w.localStorage.setItem("edc26-pid", "zack");
+      w.localStorage.setItem("edc26-name", "Zack");
+      w.localStorage.setItem("edc26-welcomed", "1");
     } catch (e) {}
   }
 });
@@ -65,8 +65,8 @@ const bar = () => d.getElementById("rallyBar");
   console.log("=== nothing set yet");
   ck("no bar in the way", bar().hidden, true);
   d.getElementById("rallyBtn").click(); await wait(80);
-  ck("panel explains it", /Everyone on miamiii sees it/.test(d.getElementById("rallyPanel").textContent), true);
-  ck("offers somewhere to meet", d.querySelectorAll("#rallyWhere button").length > 10, true);
+  ck("panel explains it", /Everyone on edc sees it/.test(d.getElementById("rallyPanel").textContent), true);
+  ck("offers somewhere to meet", d.querySelectorAll("#rallyWhere button").length, 4 + Object.keys(w.eval("ST")).length);
   ck("and quick times", d.querySelectorAll("#rallyWhen button").length, 5);
 
   console.log("\n=== setting one in two taps and a time");

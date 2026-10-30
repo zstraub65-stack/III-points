@@ -8,14 +8,14 @@ const WORKER=path.join(ROOT,"worker-entry.js");
 const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
-const DOORS_FRI = Date.UTC(2026, 9, 16, 20, 0, 0);
-const at = (h, m) => DOORS_FRI + ((h - 16) * 60 + m) * 60000;
+const DOORS_FRI = Date.UTC(2026, 10, 6, 18, 0, 0);
+const at = (h, m) => DOORS_FRI + ((h - 13) * 60 + m) * 60000;
 let CLOCK = at(23, 30);
 let BLOCK = false;                       // flip on to make the server refuse writes
 
 const board = {
   people: [
-    { person: "zack", name: "Zack", sets: ["fri|Hamdi"], at: null },
+    { person: "zack", name: "Zack", sets: ["fri|Levity"], at: null },
     { person: "cowork", name: "Dev", sets: [], at: null }
   ]
 };
@@ -23,7 +23,7 @@ const board = {
 const posts = [];
 const dom = new JSDOM(html, {
   runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     const RealDate = w.Date;
     w.Date = class extends RealDate {
@@ -41,9 +41,9 @@ const dom = new JSDOM(html, {
         if (body.remove) board.people = board.people.filter(x => x.person !== body.remove);
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
       }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: b, people: b === "miamiii" ? board.people : [] }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: b, people: b === "edc" ? board.people : [] }) });
     };
-    try { w.localStorage.clear(); w.localStorage.setItem("iiip26-pid", "zack"); } catch (e) {}
+    try { w.localStorage.clear(); w.localStorage.setItem("edc26-pid", "zack"); } catch (e) {}
   }
 });
 const w = dom.window, d = w.document;
@@ -60,7 +60,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 setTimeout(async () => {
   console.log("=== before leaving, picks still save normally");
   let n = posts.length;
-  d.querySelector('.blk[data-n="Levity"]').click();
+  d.querySelector('.blk[data-n="Wooli"]').click();
   d.querySelector('#sheet button[data-go="1"]').click();
   await wait(800);
   ck("a pick is pushed", since(n).some(p => Array.isArray(p.sets)), true);
@@ -76,17 +76,17 @@ setTimeout(async () => {
   leaveBtn().click();
   await wait(200);
   ck("leave sent", since(n).some(p => p.leave === true), true);
-  ck("flag stored", JSON.parse(w.localStorage.getItem("iiip26-left")), ["miamiii"]);
+  ck("flag stored", JSON.parse(w.localStorage.getItem("edc26-left")), ["edc"]);
   ck("button offers a way back", leaveBtn().textContent, "Rejoin this crew");
 
   console.log("\n=== this is what used to resurrect him");
   n = posts.length;
-  d.querySelector('.blk[data-n="Hamdi"]').click();
+  d.querySelector('.blk[data-n="Levity"]').click();
   d.querySelector('#sheet button[data-go="1"]').click();
   await wait(800);
   ck("toggling a pick sends nothing", since(n).length, 0);
 
-  d.querySelector('.blk[data-n="Hamdi"]').click();
+  d.querySelector('.blk[data-n="Levity"]').click();
   const sheetTxt = d.getElementById("sheet").textContent;
   d.querySelector('#sheet button[data-checkin]').click();
   await wait(200);
@@ -95,7 +95,7 @@ setTimeout(async () => {
   w.dispatchEvent(new w.Event("online"));
   await wait(800);
   ck("the online event sends nothing", since(n).filter(p => !!p.sets || !!p.name).length, 0);
-  ck("picks still kept on this device", w.localStorage.getItem("iiip26-mine").length > 2, true);
+  ck("picks still kept on this device", w.localStorage.getItem("edc26-mine").length > 2, true);
 
   console.log("\n=== rejoining");
   n = posts.length;
@@ -104,9 +104,9 @@ setTimeout(async () => {
   const rj = since(n).find(p => p.rejoin);
   ck("rejoin sent", !!rj, true);
   ck("carries the picks back up", Array.isArray(rj.sets), true);
-  ck("flag cleared", JSON.parse(w.localStorage.getItem("iiip26-left")), []);
+  ck("flag cleared", JSON.parse(w.localStorage.getItem("edc26-left")), []);
   n = posts.length;
-  d.querySelector('.blk[data-n="Levity"]').click();
+  d.querySelector('.blk[data-n="Wooli"]').click();
   d.querySelector('#sheet button[data-go="0"]').click();
   await wait(800);
   ck("writes work again", since(n).some(p => Array.isArray(p.sets)), true);
@@ -114,10 +114,10 @@ setTimeout(async () => {
   console.log("\n=== removed by somebody else, with no action from me");
   BLOCK = true;
   n = posts.length;
-  d.querySelector('.blk[data-n="Levity"]').click();
+  d.querySelector('.blk[data-n="Wooli"]').click();
   d.querySelector('#sheet button[data-go="1"]').click();
   await wait(800);
-  ck("the refusal is believed", JSON.parse(w.localStorage.getItem("iiip26-left")), ["miamiii"]);
+  ck("the refusal is believed", JSON.parse(w.localStorage.getItem("edc26-left")), ["edc"]);
   n = posts.length;
   w.dispatchEvent(new w.Event("online"));
   await wait(800);
@@ -128,7 +128,7 @@ setTimeout(async () => {
   console.log("\n=== removing somebody else");
   // the leave tests above deleted zack from the fake board; put the crew back
   board.people = [
-    { person: "zack", name: "Zack", sets: ["fri|Hamdi"], at: null },
+    { person: "zack", name: "Zack", sets: ["fri|Levity"], at: null },
     { person: "cowork", name: "Dev", sets: [], at: null }
   ];
   w.eval("pull()");

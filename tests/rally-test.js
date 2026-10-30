@@ -24,7 +24,7 @@ const call = (kv, method, board, body) =>
     method, headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined
   }), { PICKS: kv });
-const get = async kv => (await (await call(kv, "GET", "miamiii")).json());
+const get = async kv => (await (await call(kv, "GET", "edc")).json());
 
 const fail = [];
 const ck = (label, got, want) => {
@@ -36,35 +36,35 @@ const ck = (label, got, want) => {
 (async () => {
   const kv = makeKV();
   const WHEN = Date.now() + 30 * 60000;
-  await call(kv, "POST", "miamiii", { person: "zack", name: "Zack", sets: ["sat|VTSS"] });
-  await call(kv, "POST", "miamiii", { person: "v", name: "Vrushi", sets: [] });
+  await call(kv, "POST", "edc", { person: "zack", name: "Zack", sets: ["sat|Franky Rizardo"] });
+  await call(kv, "POST", "edc", { person: "v", name: "Vrushi", sets: [] });
 
   console.log("=== no rally to start");
   ck("none set", (await get(kv)).rally, null);
 
   console.log("\n=== setting one");
-  const r = await (await call(kv, "POST", "miamiii", { person: "zack", rally: { where: "Entrance", when: WHEN, note: "by the tiger", byName: "Zack" } })).json();
+  const r = await (await call(kv, "POST", "edc", { person: "zack", rally: { where: "Entrance", when: WHEN, note: "by the tiger", byName: "Zack" } })).json();
   ck("accepted", r.ok, true);
   let board = await get(kv);
   ck("everyone reads the same one", [board.rally.where, board.rally.when, board.rally.note], ["Entrance", WHEN, "by the tiger"]);
   ck("records who set it", [board.rally.by, board.rally.byName], ["zack", "Zack"]);
 
   console.log("\n=== it does not disturb anything else");
-  ck("picks untouched", board.people.find(p => p.person === "zack").sets, ["sat|VTSS"]);
+  ck("picks untouched", board.people.find(p => p.person === "zack").sets, ["sat|Franky Rizardo"]);
   ck("names untouched", board.people.find(p => p.person === "v").name, "Vrushi");
 
   console.log("\n=== saying you are in");
   const t = board.rally.t;
-  await call(kv, "POST", "miamiii", { person: "v", ack: t });
+  await call(kv, "POST", "edc", { person: "v", ack: t });
   board = await get(kv);
   ck("acknowledgement stored", board.people.find(p => p.person === "v").ack, t);
   ck("others unaffected", board.people.find(p => p.person === "zack").ack, 0);
-  await call(kv, "POST", "miamiii", { person: "v", sets: ["sat|VTSS"] });
+  await call(kv, "POST", "edc", { person: "v", sets: ["sat|Franky Rizardo"] });
   ck("a later pick does not clear it", (await get(kv)).people.find(p => p.person === "v").ack, t);
 
   console.log("\n=== replacing it");
   const WHEN2 = Date.now() + 70 * 60000;
-  await call(kv, "POST", "miamiii", { person: "v", rally: { where: "Food trucks", when: WHEN2, byName: "Vrushi" } });
+  await call(kv, "POST", "edc", { person: "v", rally: { where: "Food trucks", when: WHEN2, byName: "Vrushi" } });
   board = await get(kv);
   ck("one rally at a time", board.rally.where, "Food trucks");
   ck("with a new stamp", board.rally.t !== t, true);
@@ -72,19 +72,19 @@ const ck = (label, got, want) => {
     board.people.find(p => p.person === "v").ack === board.rally.t, false);
 
   console.log("\n=== calling it off");
-  await call(kv, "POST", "miamiii", { person: "zack", rally: null });
+  await call(kv, "POST", "edc", { person: "zack", rally: null });
   ck("cleared", (await get(kv)).rally, null);
 
   console.log("\n=== input handling");
-  await call(kv, "POST", "miamiii", { person: "zack", rally: { where: "<b>x</b>".repeat(20), when: WHEN, note: "ok", byName: "Zack" } });
+  await call(kv, "POST", "edc", { person: "zack", rally: { where: "<b>x</b>".repeat(20), when: WHEN, note: "ok", byName: "Zack" } });
   board = await get(kv);
   ck("markup stripped", /[<>]/.test(board.rally.where), false);
   ck("length capped", board.rally.where.length <= 40, true);
   ck("a rally with neither field clears instead of saving junk",
-    (await (await call(kv, "POST", "miamiii", { person: "zack", rally: {} })).json()).rally, null);
+    (await (await call(kv, "POST", "edc", { person: "zack", rally: {} })).json()).rally, null);
 
   console.log("\n=== crews stay separate");
-  await call(kv, "POST", "miamiii", { person: "zack", rally: { where: "Entrance", when: WHEN, byName: "Zack" } });
+  await call(kv, "POST", "edc", { person: "zack", rally: { where: "Entrance", when: WHEN, byName: "Zack" } });
   await call(kv, "POST", "drum-boston", { person: "b", name: "Bethany", sets: [] });
   ck("another crew has its own", (await (await call(kv, "GET", "drum-boston")).json()).rally, null);
 

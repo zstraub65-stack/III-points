@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>III Points Board</title>
-<meta name="description" content="Shared III Points 2026 set times grid.">
+<title>EDC Orlando Board</title>
+<meta name="description" content="Shared EDC Orlando 2026 set times grid.">
 <meta name="theme-color" content="#B9A9EF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,18 +14,23 @@
 /* Poster reproduction: lavender/pink ground, grain, circuit traces, 13 stage columns
    between hour rails. Display = Anton (poster's heavy condensed), UI = Archivo, times = DM Mono. */
 :root{
-  color-scheme: light;
-  --ground:#B9A9EF; --ground2:#D3C8F8; --edge:#7E6AC4;
-  --ink:#0C0A14; --rule:rgba(12,10,20,.30);
-  --chrome:#13111C; --chromeInk:#F4F1FF;
-  --rail:#F6F3FF;
+  color-scheme: dark;
+  /* EDC runs into the night and the posters are deep space, so dark is the
+     default here rather than a toggle. */
+  --ground:#0A0A18; --ground2:#121228; --edge:#2A2A52;
+  --ink:#ECF6FF; --rule:rgba(236,246,255,.22);
+  --chrome:#05050E; --chromeInk:#D8FF48;
+  --rail:#15152C;
+  --neon:#D8FF48; --glow:#35D6E8; --accent:#35D6E8;
   --disp:Anton,"Arial Narrow",Impact,sans-serif;
   --ui:Archivo,"Helvetica Neue",Helvetica,Arial,sans-serif;
   --mono:"DM Mono",ui-monospace,Menlo,monospace;
   --ppm:1.5;
 }
-body.sat{--ground:#F58CA6;--ground2:#FBB9C8;--edge:#C4546F;--rail:#FFF2F5;--chrome:#2A0E16}
-body.night{--ground:#0E1016;--ground2:#171B25;--edge:#000;--ink:#ECE8DE;--rule:rgba(236,232,222,.22);
+body.d-fri{--accent:#FF6A3D;--edge:#53281C}
+body.d-sat{--accent:#F5C542;--edge:#4C3C12}
+body.d-sun{--accent:#35D6E8;--edge:#163F48}
+body.night{--ground:#E8E6F2;--ground2:#F4F2FA;--edge:#B9B6CC;--ink:#0C0A14;--rule:rgba(12,10,20,.28);--rail:#FFFFFF;--chrome:#13111C;
   --chrome:#05070B;--chromeInk:#ECE8DE;--rail:#141821;color-scheme:dark}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -46,15 +51,26 @@ body.night #grain{opacity:.28;mix-blend-mode:screen}
 .mastrow{display:flex;align-items:center;gap:8px}
 .tri{width:30px;height:27px;flex:0 0 30px}
 .daytag{border:2.5px solid var(--ink);border-radius:5px;padding:4px 11px 3px;display:flex;align-items:baseline;gap:7px;background:transparent}
-.daytag .d1{font-family:var(--disp);font-size:24px;letter-spacing:-.01em;line-height:1}
-.daytag .d2{font-family:var(--disp);font-size:15px;letter-spacing:.01em;line-height:1;opacity:.92}
+.daytag .d1{font-family:var(--disp);font-size:24px;letter-spacing:-.01em;line-height:1;white-space:nowrap}
+.daytag .d2{font-family:var(--disp);font-size:15px;letter-spacing:.01em;line-height:1;opacity:.92;white-space:nowrap}
 .clock{width:20px;height:20px;background:#F0425A;border:2px solid var(--ink);border-radius:4px;flex:0 0 20px;display:grid;place-items:center}
 .clock span{display:block;width:2px;height:7px;background:var(--ink);transform:rotate(38deg);transform-origin:bottom}
 .yr{font-family:var(--disp);font-size:12px;background:#B4E34B;border:2px solid var(--ink);border-radius:4px;padding:2px 7px 1px;line-height:1.1}
 .trace{flex:1;height:22px;min-width:16px;opacity:.72}
-.logo{font-family:var(--disp);font-size:19px;letter-spacing:-.03em;background:linear-gradient(180deg,#CFE6FF,#8FB6E8);
+.logo{color:var(--neon);font-family:var(--disp);font-size:19px;letter-spacing:-.03em;background:linear-gradient(180deg,#CFE6FF,#8FB6E8);
   border:2.5px solid var(--ink);border-radius:5px;padding:3px 8px 2px;color:#0C1830;white-space:nowrap;
   text-shadow:0 1px 0 rgba(255,255,255,.7)}
+/* The masthead is one row on a desktop and cannot be on a phone: a long day
+   name plus a long month plus the wordmark is wider than any handset. So it
+   wraps, the decorative trace goes, and the wordmark takes the second line
+   hard right rather than being clipped off the edge. */
+@media (max-width:620px){
+  .mastrow{flex-wrap:wrap;row-gap:7px}
+  .trace{display:none}
+  .daytag .d1{font-size:21px}
+  .daytag .d2{font-size:13px}
+  .logo{font-size:16px;margin-left:auto}
+}
 
 /* ---- controls ---- */
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--chrome);color:var(--chromeInk);
@@ -67,6 +83,7 @@ body.night #grain{opacity:.28;mix-blend-mode:screen}
 .grow{flex:1}
 .soon{font-weight:800;color:#E3112A}
 body.night .soon{color:#FF5A6E}
+#dayseg [aria-pressed="true"]{background:var(--accent);color:#07070F}
 .who{font-size:11.5px;opacity:.78;font-weight:600;padding-left:2px;width:100%}
 
 /* ---- grid ---- */
@@ -78,6 +95,11 @@ body.night .soon{color:#FF5A6E}
 .rail.stick .hd{z-index:22}
 .rail .hd{font-family:var(--disp);font-size:10px}
 .col{width:120px;flex:0 0 120px}
+/* 120px is the floor that keeps an artist name readable on a phone, where the
+   grid scrolls sideways anyway. Only on a screen wide enough to hold every
+   stage at once do the columns share out the spare room, rather than leaving
+   a four-stage grid stranded in the left third of a laptop. */
+@media (min-width:760px){ .col{flex:1 0 120px;max-width:260px} }
 .col.gap{margin-left:9px;border-left:2px dashed var(--rule)}
 .hd{position:sticky;top:0;z-index:18;background:var(--ground);
   height:46px;display:flex;align-items:center;justify-content:center;text-align:center;
@@ -210,8 +232,17 @@ body.night #setup code{background:rgba(255,255,255,.1)}
   background:#0C0A14;color:#fff;border-radius:3px;padding:1px 4px;letter-spacing:.02em}
 .livebadge.fire{background:#E3112A}
 .blk.livehere{box-shadow:0 0 0 2px #E3112A inset}
-.nowline{position:absolute;left:0;right:0;border-top:2px solid #E3112A;pointer-events:none;z-index:7}
-.nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:#E3112A}
+.nowline{position:absolute;left:0;right:0;border-top:2px solid var(--accent);pointer-events:none;z-index:7}
+.nowline::before{content:"";position:absolute;left:0;top:-4px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.stagelist{display:flex;flex-direction:column;gap:6px;margin:10px 0 2px}
+.stagerow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;cursor:pointer;
+  background:var(--rail);color:inherit;border:2px solid var(--ink);border-radius:7px;padding:11px 12px;
+  font-family:var(--disp);font-size:15px;letter-spacing:.02em}
+.stagerow:hover,.stagerow:focus-visible{outline:none;transform:translateX(2px)}
+.stagerow .sr{margin-left:auto;font-style:normal;font-size:14px}
+.stagerow .sn{font-family:var(--ui);font-size:10px;font-weight:800;background:#E3112A;color:#fff;
+  border-radius:20px;padding:3px 7px;font-style:normal;margin-left:auto}
+.stagerow .sr+.sn{margin-left:6px}
 #rallyPanel{margin:12px 16px 0}
 #rallyBar{margin:0}
 .rallystrip{display:flex;align-items:center;gap:7px;width:100%;text-align:left;
@@ -291,14 +322,13 @@ body.night #setup code{background:rgba(255,255,255,.1)}
         <rect x="74" y="1.5" width="6" height="6" fill="currentColor"/><rect x="200" y="2.5" width="5" height="5" fill="currentColor"/>
       </svg>
       <span class="yr">2026</span>
-      <span class="logo">III POINTS</span>
+      <span class="logo">EDC ORLANDO</span>
     </div>
   </div>
 
   <div class="bar">
     <div class="seg" id="dayseg">
-      <button data-day="fri" aria-pressed="true">FRI</button>
-      <button data-day="sat" aria-pressed="false">SAT</button>
+      <!-- filled from FEST.days at boot -->
     </div>
     <button class="tg" id="fMine" aria-pressed="false">Mine</button>
     <button class="tg" id="fCrew" aria-pressed="false">Crew</button>
@@ -381,68 +411,39 @@ body.night #setup code{background:rgba(255,255,255,.1)}
 var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});
 /* ===== stage identity, in poster column order ===== */
 const ST={
- "Mind Melt":["#F2A4C6",0],"Sector 3":["#8CC2EE",0],"Isotropic":["#E2DD61",0],"RC95":["#EF8F3A",0],
- "444":["#17171A",1],"S3QUENC3":["#B6E248",0],"Grand Central":["#F6CDA6",0],
- "Vertex":["#ED5A6D",0],"Door IV":["#6DA6DE",0],"Halo 88":["#ADC2D2",0],
- "Red Bull Unforeseen":["#F0B604",0],"III Points Radio":["#D4E698",0],"Players Club":["#E6A6CE",0]};
+ "Kinetic Field":["#FF5A3D",0],"Circuit Grounds":["#35D6E8",0],
+ "Neon Garden":["#A8E63F",0],"Stereo Bloom":["#C77DFF",0]};
 const ORDER=Object.keys(ST);
-const GAPAFTER="Grand Central";
+const GAPAFTER="";   // no visual break between stages at four columns
 
 function T(s){const m=s.match(/^(\d{1,2}):(\d{2})(am|pm)$/);let h=+m[1];const mi=+m[2];
- if(m[3]==="pm"&&h<12)h+=12; if(m[3]==="am"&&h===12)h=0; if(h<16)h+=24; return (h-16)*60+mi;}
-function fmt(t){const tot=t+960,h24=Math.floor(tot/60)%24,m=tot%60;
+ if(m[3]==="pm"&&h<12)h+=12; if(m[3]==="am"&&h===12)h=0; if(h<FEST.openHour)h+=24; return (h-FEST.openHour)*60+mi;}
+function fmt(t){const tot=t+FEST.openHour*60,h24=Math.floor(tot/60)%24,m=tot%60;
  const ap=h24>=12?"PM":"AM";let h=h24%12;if(!h)h=12;return h+":"+String(m).padStart(2,"0")+" "+ap;}
 function sh(t){return fmt(t).replace(" ","").toLowerCase();}
 
 
 /* What moved in the official set-times update of 16 Oct 2026, keyed like
    picks. Keep these in step with the schedule above when it changes again. */
-const CHANGED={
-  "sat|Charlotte de Witte":"Moved earlier. Was 2:45am\u20134:00am, now 1:30am\u20132:45am, straight after VTSS.",
-  "sat|999999999":"Moved later. Was 1:30am\u20132:45am, now closing RC95 at 2:45am\u20134:00am.",
-  "fri|Miguelle & Tons":"Saraga is off this B2B. Same slot."
-};
-const CHANGED_ON="16 Oct";
+const CHANGED={};
+const CHANGED_ON="";
 
 /* ===== site map ===== */
-/* Positions traced from the official festival map: five blocks running from
-   the entrance at the bottom up to the Mind Melt block at the top right.
-   A rough schematic, not a survey. Keys match ST exactly. */
-const MAP={
-  "Mind Melt":          [58,  4, 34, 11],
-  "Players Club":       [30, 17, 24,  9],
-  "444":                [72, 18, 20,  8],
-  "Red Bull Unforeseen":[70, 29, 22,  9],
-  "Door IV":            [34, 29, 22,  9],
-  "S3QUENC3":           [ 6, 26, 22,  9],
-  "Isotropic":          [ 2, 40, 20,  9],
-  "III Points Radio":   [26, 42, 24,  9],
-  "Sector 3":           [54, 43, 22, 10],
-  "Vertex":             [80, 43, 18, 10],
-  "Halo 88":            [ 8, 54, 20,  9],
-  "Grand Central":      [74, 57, 24, 10],
-  "RC95":               [22, 66, 22,  9]
-};
+/* Stage boxes for a drawn site plan, in a 100x100 box. Empty until someone
+   lays out this festival's site; the Map tab lists the stages instead. */
+const MAP={};
+
 const MAP_ENTRANCE=[36, 84, 28, 8];
+/* Only draw a map when there is one to draw. */
+const MAP_READY=()=>Object.keys(MAPIMG).length>0;
 
 /* Where each stage sits on the official map, as a fraction of the image.
    Estimated by eye from the artwork, so nudge these if a tap feels off.
    Only used when public/map.jpg is present. */
-const MAPIMG={
-  "S3QUENC3":           [0.345, 0.400],
-  "Players Club":       [0.497, 0.311],
-  "Mind Melt":          [0.675, 0.278],
-  "444":                [0.795, 0.336],
-  "Red Bull Unforeseen":[0.790, 0.400],
-  "Door IV":            [0.520, 0.446],
-  "Isotropic":          [0.155, 0.507],
-  "III Points Radio":   [0.372, 0.525],
-  "Sector 3":           [0.575, 0.533],
-  "Vertex":             [0.795, 0.515],
-  "Halo 88":            [0.245, 0.590],
-  "Grand Central":      [0.797, 0.622],
-  "RC95":               [0.313, 0.692]
-};
+/* Where each stage sits on the official map image, as a fraction of it.
+   Needs the festival's own map in public/ plus coordinates read off it. */
+const MAPIMG={};
+
 /* Whatever the phone called it on the way in. First one that loads wins. */
 const MAP_SRC_TRY=["map.jpg","map.jpeg","map.png","map.webp","map.JPG","map.JPEG"];
 let MAP_SRC=null;
@@ -451,175 +452,124 @@ let mapImgOK=null;
 
 /* ===== schedule, transcribed from the two official posters ===== */
 const FRI=[
-["Mind Melt","Ackdaddy","4:00pm","5:00pm"],["Mind Melt","Vania Junco","5:05pm","5:35pm"],
-["Mind Melt","Connan Mockasin","6:00pm","7:00pm"],["Mind Melt","Men I Trust","7:25pm","8:15pm"],
-["Mind Melt","Parcels","8:45pm","10:00pm"],["Mind Melt","Tokischa","10:30pm","11:15pm"],
-["Mind Melt","Cloonee","11:30pm","1:00am"],["Mind Melt","Beltran","1:00am","2:30am","B2B Ben Sterling"],
-["Mind Melt","PAWSA","2:30am","4:00am"],
-["Sector 3","Kumi","4:00pm","5:00pm"],["Sector 3","Cumbiamba","5:05pm","5:45pm"],
-["Sector 3","Amar","6:10pm","6:40pm"],["Sector 3","Ghostface Killah","7:00pm","7:55pm","Supreme Clientele"],
-["Sector 3","Bone Thugs-N-Harmony","8:15pm","9:00pm"],["Sector 3","Lil' Kim","9:15pm","10:00pm"],
-["Sector 3","Mind Enterprises","10:20pm","11:10pm"],["Sector 3","Purity Ring","11:35pm","12:25am"],
-["Sector 3","Danny Brown","12:45am","1:30am"],["Sector 3","Jane Remover","1:50am","2:35am"],
-["Sector 3","Flying Lotus","3:00am","4:00am"],
-["Isotropic","Fiin","4:00pm","5:15pm"],["Isotropic","Daizy","5:15pm","6:30pm"],
-["Isotropic","Maher Daniel","6:30pm","8:00pm","B2B Mai Iachetti"],
-["Isotropic","Malóne Morez","8:00pm","9:30pm","B2B Miluhska"],
-["Isotropic","Miguelle & Tons","9:30pm","11:00pm"],
-["Isotropic","Brunello","11:00pm","12:30am","B2B Rafael"],
-["Isotropic","Ahmed Spins","12:30am","2:00am","B2B OMRI."],
-["Isotropic","Vintage Culture","2:00am","4:00am","B2B Max Styler"],
-["RC95","Mason Norris","4:00pm","5:15pm","B2B Mia Vendetta"],
-["RC95","Proletar","5:15pm","6:15pm","B2B Zamurai"],["RC95","V1FRO","6:15pm","7:15pm"],
-["RC95","ITBSP","7:15pm","8:15pm"],["RC95","Jigitz","8:15pm","9:15pm"],
-["RC95","Mary Droppinz","9:15pm","10:15pm"],["RC95","Ivy Lab","10:15pm","11:15pm"],
-["RC95","Hamdi","11:15pm","12:15am"],["RC95","Levity","12:15am","1:30am","B2B Taiki Nulight"],
-["RC95","Odd Mob","1:30am","2:45am"],["RC95","Disco Lines","2:45am","4:00am"],
-["444","Heidi Lawden","4:00pm","8:00pm"],["444","DJ Harvey","8:00pm","12:00am"],["444","Floating Points","12:00am","4:00am"],
-["S3QUENC3","duun","4:00pm","6:00pm","B2B Sleepy C"],["S3QUENC3","R/V Calypso","6:00pm","7:15pm"],
-["S3QUENC3","Jump Source","7:15pm","8:45pm","live"],["S3QUENC3","Jacques Greene","8:45pm","10:00pm"],
-["S3QUENC3","Eli Escobar","10:00pm","11:30pm","B2B Jubilee"],
-["S3QUENC3","Danny Daze","11:30pm","1:00am","B2B DJ Godfather"],
-["S3QUENC3","Shanti Celeste","1:00am","2:30am","B2B Peach"],["S3QUENC3","Honey Dijon","2:30am","4:00am"],
-["Grand Central","Lylac","4:30pm","5:00pm"],["Grand Central","IIRY?","5:25pm","5:55pm"],
-["Grand Central","Blind Fish","6:15pm","7:00pm"],["Grand Central","Nicholas G. Padilla","7:15pm","8:00pm"],
-["Grand Central","Rental Snakes","8:15pm","9:00pm"],["Grand Central","Corridos Ketamina","9:15pm","9:55pm"],
-["Grand Central","Patch +","10:10pm","10:55pm"],["Grand Central","Nate Sib","11:15pm","12:00am"],
-["Grand Central","Boygirl","12:20am","12:50am"],["Grand Central","MGNA Crrrta","1:10am","1:55am"],
-["Grand Central","ZEP","2:15am","3:00am"],
-["Vertex","Megusta","4:00pm","5:30pm","B2B MIGS"],["Vertex","Grace Arribas","5:30pm","7:00pm","B2B MARTE"],
-["Vertex","Rello","7:00pm","8:15pm"],["Vertex","Dan Molinari","8:15pm","9:30pm"],
-["Vertex","Slugg","9:30pm","11:00pm","B2B Raje"],["Vertex","Roddy Lima","11:00pm","12:15am"],
-["Vertex","Discip","12:15am","1:30am"],["Vertex","Ragie Ban","1:30am","2:45am"],["Vertex","INVT","2:45am","4:00am","live"],
-["Door IV","Feph","4:00pm","6:00pm","B2B Mr. Tron"],["Door IV","Adam At The Door","6:00pm","7:15pm"],
-["Door IV","Uchi","7:15pm","8:30pm"],["Door IV","Julia Saturno","8:30pm","10:00pm","B2B Lotusoph"],
-["Door IV","Gio Elia","10:00pm","11:30pm","B2B Meghan Lee"],["Door IV","Bill Patrick","11:30pm","1:00am","B2B Bort"],
-["Door IV","oma totem","1:00am","2:45am","B2B True Vine"],["Door IV","eco-sistema","2:45am","4:00am"],
-["Halo 88","Aphex Twink","4:00pm","5:30pm","B2B FORESEER"],["Halo 88","DJ Sabi","5:30pm","7:00pm","B2B GRUE5OME"],
-["Halo 88","ALEJO","7:00pm","8:00pm"],["Halo 88","Miguel Clark","8:00pm","9:15pm","B2B Naim Zarzour"],
-["Halo 88","FIUZA","9:15pm","10:30pm","B2B Madison Kay"],["Halo 88","Elias Garcia","10:30pm","12:00am","B2B Mila Gama"],
-["Halo 88","Dr. Rubinstein","12:00am","1:30am","B2B Ultrathem"],
-["Halo 88","Joanna Kuchta","1:30am","3:00am","B2B Robyn Sin Love"],["Halo 88","Tech G1rls","3:00am","4:00am"],
-["Red Bull Unforeseen","Katie Ox","4:00pm","6:00pm","B2B Nat Siriani"],
-["Red Bull Unforeseen","Thunderpony","6:00pm","7:30pm","B2B Tiffy Vera"],
-["Red Bull Unforeseen","Aabel","7:30pm","9:00pm","B2B Siegel"],
-["Red Bull Unforeseen","Maccabiii","9:00pm","10:30pm","B2B Pezlo MD"],
-["Red Bull Unforeseen","Moscoman","10:30pm","11:45pm"],
-["Red Bull Unforeseen","eveava","11:45pm","1:15am","B2B Jovigibs"],
-["Red Bull Unforeseen","Bakke","1:15am","2:30am"],
-["Red Bull Unforeseen","Lousy Lover","2:30am","4:00am","B2B Lucaz"],
-["III Points Radio","Sportswax","4:00pm","6:00pm"],["III Points Radio","Extra Andrew","6:00pm","7:30pm","B2B Mutant Pete"],
-["III Points Radio","Nicole Gallamini","7:30pm","9:00pm","B2B Nikita Green"],
-["III Points Radio","Inbal","9:00pm","10:30pm","B2B Rimaye"],["III Points Radio","Will Renuart","10:30pm","11:45pm"],
-["III Points Radio","Taimur","11:45pm","1:15am","B2B Will Buck"],["III Points Radio","Godisound","1:15am","2:30am"],
-["III Points Radio","Alexx in Chainss","2:30am","4:00am","B2B Soltek"],
-["Players Club","Scotty Sobek","4:00pm","5:30pm"],["Players Club","Lauren Palma","5:30pm","6:45pm"],
-["Players Club","Lagrimas de Oro","6:45pm","8:00pm"],["Players Club","Deep Cleansing","8:00pm","9:15pm"],
-["Players Club","Baby Jesus","9:15pm","10:45pm","B2B CHAOS!"],["Players Club","Puma","10:45pm","12:00am"],
-["Players Club","Cami di Marzo","12:00am","1:15am"],["Players Club","Dude Skywalker","1:15am","2:45am"],
-["Players Club","Differ","2:45am","4:00am"]
+["Kinetic Field","Zack Martino","1:00pm","2:25pm"],
+["Kinetic Field","Joa","2:25pm","3:25pm"],
+["Kinetic Field","Hayla","3:25pm","4:25pm"],
+["Kinetic Field","Pegassi","4:25pm","5:28pm"],
+["Kinetic Field","Alesso","5:28pm","6:44pm","sunset"],
+["Kinetic Field","Kream","6:47pm","7:57pm"],
+["Kinetic Field","Afrojack","8:00pm","9:10pm"],
+["Kinetic Field","Mau P","9:13pm","10:28pm"],
+["Kinetic Field","David Guetta","10:31pm","11:57pm"],
+["Circuit Grounds","Sloth","1:00pm","2:15pm"],
+["Circuit Grounds","Benda","2:15pm","3:30pm","B2B Vastive"],
+["Circuit Grounds","Big Florida","3:30pm","4:30pm"],
+["Circuit Grounds","Kompany","4:30pm","5:30pm"],
+["Circuit Grounds","Adventure Club","5:30pm","6:30pm","sunset"],
+["Circuit Grounds","Bou","6:30pm","7:30pm","B2B Kanine"],
+["Circuit Grounds","Level Up","7:30pm","8:30pm"],
+["Circuit Grounds","Whethan","8:30pm","9:35pm"],
+["Circuit Grounds","Levity","9:35pm","10:45pm"],
+["Circuit Grounds","Wooli","10:45pm","12:00am"],
+["Neon Garden","Matthias","1:00pm","3:00pm"],
+["Neon Garden","Inbal","3:00pm","4:30pm"],
+["Neon Garden","Azzeca","4:30pm","6:00pm"],
+["Neon Garden","Obskür","6:00pm","7:30pm","sunset"],
+["Neon Garden","Omar+","7:30pm","9:00pm"],
+["Neon Garden","Brunello","9:00pm","10:30pm"],
+["Neon Garden","Josh Baker","10:30pm","12:00am"],
+["Stereo Bloom","Raje","1:00pm","2:15pm"],
+["Stereo Bloom","AAT","2:15pm","3:30pm"],
+["Stereo Bloom","Idemi","3:30pm","4:30pm"],
+["Stereo Bloom","Joshwa","4:30pm","5:30pm"],
+["Stereo Bloom","Malugi","5:30pm","6:45pm","sunset"],
+["Stereo Bloom","Bullet Tooth","6:45pm","8:00pm","B2B Sidney Charles"],
+["Stereo Bloom","Interplanetary Criminal","8:00pm","9:15pm"],
+["Stereo Bloom","MPH","9:15pm","10:30pm"],
+["Stereo Bloom","Chris Lorenzo","10:30pm","12:00am"]
 ];
 const SAT=[
-["Mind Melt","Carter Jackson Brown","4:00pm","5:00pm"],["Mind Melt","Loukeman","5:15pm","6:05pm"],
-["Mind Melt","ear","6:20pm","7:00pm"],["Mind Melt","Nettspend","7:25pm","8:10pm"],
-["Mind Melt","Blood Orange","8:40pm","9:50pm"],["Mind Melt","Adam Port","10:15pm","11:30pm"],
-["Mind Melt","Underworld","12:00am","1:00am","live"],["Mind Melt","Four Tet","1:30am","2:45am"],
-["Mind Melt","KETTAMA","2:45am","4:00am"],
-["Sector 3","Nikole","4:15pm","4:45pm"],["Sector 3","doris dana","5:00pm","5:30pm","live"],
-["Sector 3","res_","5:45pm","6:30pm","live"],["Sector 3","ML Buch","6:45pm","7:30pm"],
-["Sector 3","Tricky","7:55pm","8:45pm"],["Sector 3","rusowsky","9:10pm","9:55pm"],
-["Sector 3","Kelela","10:20pm","11:05pm"],["Sector 3","horsegiirL","11:30pm","12:20am"],
-["Sector 3","Bassvictim","12:40am","1:25am"],["Sector 3","Machine Girl","1:45am","2:35am","live"],
-["Sector 3","Sunn O)))","3:00am","4:00am","live"],
-["Isotropic","La BB","4:00pm","5:15pm"],["Isotropic","Godblessjai","5:15pm","6:30pm"],
-["Isotropic","Silvie Loto","6:30pm","8:00pm","B2B Ms. Mada"],["Isotropic","Marsolo","8:00pm","9:15pm"],
-["Isotropic","Omar+","9:15pm","10:30pm"],["Isotropic","ChaseWest","10:30pm","11:45pm"],
-["Isotropic","Sosa","11:45pm","1:00am"],["Isotropic","Max Dean","1:00am","2:30am","B2B Luke Dean"],
-["Isotropic","Marco Carola","2:30am","4:00am","B2B Franky Rizardo"],
-["RC95","DomnRob","4:00pm","5:00pm"],["RC95","Generous B","5:00pm","6:15pm","B2B Hakuna"],
-["RC95","Cole Knight","6:15pm","7:30pm","B2B DREYA V"],
-["RC95","Coffintexts","7:30pm","8:45pm","B2B DJ Fuckoff"],["RC95","Nick León","8:45pm","10:00pm"],
-["RC95","KI/KI","10:00pm","11:15pm"],["RC95","¥ØU$UK€ ¥UKIMAT$U","11:15pm","12:30am"],
-["RC95","VTSS","12:30am","1:30am"],["RC95","Charlotte de Witte","1:30am","2:45am"],
-["RC95","999999999","2:45am","4:00am","live"],
-["444","Willikens & Ivkovic","4:00pm","8:00pm"],["444","Red Axes","8:00pm","12:00am"],["444","Seth Troxler","12:00am","4:00am"],
-["S3QUENC3","Grant Sabadash","4:00pm","5:45pm","B2B Shir Miya"],
-["S3QUENC3","Natalia Roth","5:45pm","7:15pm","B2B Max Stern"],["S3QUENC3","Rebolledo","7:15pm","8:30pm"],
-["S3QUENC3","Whitesquare","8:30pm","9:45pm"],["S3QUENC3","Roman Flügel","9:45pm","11:00pm"],
-["S3QUENC3","Daphni","11:00pm","12:15am"],["S3QUENC3","Interplanetary Criminal","12:15am","1:30am"],
-["S3QUENC3","HAAi","1:30am","2:45am"],["S3QUENC3","Tiga","2:45am","4:00am"],
-["Grand Central","Huracán","4:15pm","4:45pm"],["Grand Central","VVilhelm","5:10pm","5:40pm"],
-["Grand Central","Camp Blu","6:05pm","6:35pm"],["Grand Central","Homicide Jenny","7:00pm","7:30pm"],
-["Grand Central","LADYBOY","7:55pm","8:25pm"],["Grand Central","Emily Afre","8:50pm","9:20pm"],
-["Grand Central","Fine","9:45pm","10:30pm"],["Grand Central","Chanel Beads","10:55pm","11:40pm"],
-["Grand Central","Velora","12:05am","12:35am"],["Grand Central","YHWH Nailgun","1:00am","1:45am","live"],
-["Grand Central","Crespi Drum Syndicate","2:00am","3:00am","live"],
-["Vertex","Allnightkev","4:00pm","5:30pm","B2B Lo-G"],["Vertex","Alezsandro","5:30pm","7:00pm","B2B Dalva"],
-["Vertex","Idriss D","7:00pm","8:30pm","B2B Danyelino"],["Vertex","Joss Dean","8:30pm","9:45pm"],
-["Vertex","KinAhau","9:45pm","11:00pm"],["Vertex","Dean Turnley","11:00pm","12:15am"],
-["Vertex","Sam Alfred","12:15am","1:30am"],["Vertex","MPH","1:30am","2:45am"],["Vertex","2UP!","2:45am","4:00am"],
-["Door IV","vsyana","4:00pm","5:15pm"],["Door IV","serafitz","5:15pm","6:45pm","B2B SOL Discos"],
-["Door IV","DJ Ray","6:45pm","8:15pm","B2B EZ Dee"],["Door IV","Mystic Bill","8:15pm","9:45pm","B2B Artime"],
-["Door IV","David Vunk","9:45pm","11:45pm"],["Door IV","Terence Tabeau","11:45pm","1:00am"],
-["Door IV","DJ Three","1:00am","2:30am","B2B Sister System"],
-["Door IV","Ashley Venom","2:30am","4:00am","B2B Souls Departed"],
-["Halo 88","Khami","4:00pm","5:00pm"],["Halo 88","Dennis Baker","5:00pm","6:00pm","B2B D. Luxe"],
-["Halo 88","Bricolage","6:00pm","7:15pm","B2B DAY/DEM"],["Halo 88","Lupreme","7:15pm","8:30pm","B2B SANTO"],
-["Halo 88","Bonita Applebumz","8:30pm","9:45pm","B2B Toni Shardai"],
-["Halo 88","PLAYSHADO","9:45pm","11:00pm","B2B SEL.6"],["Halo 88","Mr. Bitch","11:00pm","12:00am"],
-["Halo 88","Berrakka","12:00am","1:15am","B2B Pressure Point"],["Halo 88","Faith Leazae","1:15am","1:45am"],
-["Halo 88","Lady Narcisse","1:45am","3:00am","B2B Racci"],["Halo 88","Duality","3:00am","4:00am","B2B GumtheWrapper"],
-["Red Bull Unforeseen","P1no","4:00pm","5:30pm","B2B Trippie Hippie"],
-["Red Bull Unforeseen","Bozito","5:30pm","6:45pm","B2B Gabo Escalona"],
-["Red Bull Unforeseen","Spice Crime","6:45pm","8:00pm","B2B Violeta"],
-["Red Bull Unforeseen","Ale Acosta","8:00pm","9:15pm","B2B Hazón"],
-["Red Bull Unforeseen","JINN_PR","9:15pm","10:15pm"],["Red Bull Unforeseen","619!","10:15pm","11:30pm"],
-["Red Bull Unforeseen","1-800-305","11:30pm","12:45am"],
-["Red Bull Unforeseen","SATURNSARii","12:45am","2:15am","B2B SUZ"],
-["Red Bull Unforeseen","Liquid Dinosaurs","2:15am","2:45am"],["Red Bull Unforeseen","Kujo","2:45am","4:00am","B2B RARA"],
-["III Points Radio","NXTEL","4:00pm","5:00pm"],["III Points Radio","Shinobi","5:00pm","6:00pm"],
-["III Points Radio","Jinks","6:00pm","7:30pm","B2B Romulo Del Castillo"],
-["III Points Radio","Milo Ziro","7:30pm","9:00pm","B2B Xilla"],
-["III Points Radio","Marie Qrie","9:00pm","10:30pm","B2B Viva Vidal"],
-["III Points Radio","Rude Boy","10:30pm","12:00am","B2B SDRV"],
-["III Points Radio","phiphi","12:00am","1:30am","B2B Winter Wrong"],
-["III Points Radio","Lizzie_mcguire","1:30am","2:30am"],["III Points Radio","Mango","2:30am","4:00am","B2B Mister Lo"],
-["Players Club","DJ Ahamed","4:00pm","5:30pm"],["Players Club","JBZ","5:30pm","6:30pm"],
-["Players Club","Villu","6:30pm","7:45pm"],["Players Club","Canela","7:45pm","8:45pm"],
-["Players Club","Ellynora","8:45pm","10:00pm"],["Players Club","Saint & Romero","10:00pm","11:00pm","hybrid"],
-["Players Club","Jeremy Ismael","11:00pm","12:15am"],["Players Club","Jason Rault","12:15am","1:30am"],
-["Players Club","Nii Tei","1:30am","2:45am"],["Players Club","Monoky","2:45am","4:00am"]
+["Kinetic Field","Monoky","1:00pm","1:33pm"],
+["Kinetic Field","Me N Ü","1:33pm","2:33pm"],
+["Kinetic Field","Twinsick","2:33pm","3:33pm"],
+["Kinetic Field","Aaron Hibell","3:33pm","4:33pm"],
+["Kinetic Field","Acraze","4:33pm","5:38pm","B2B CID"],
+["Kinetic Field","Alan Walker","5:38pm","6:53pm","sunset"],
+["Kinetic Field","Nico Moreno","6:57pm","8:02pm"],
+["Kinetic Field","Steve Aoki","8:05pm","9:10pm"],
+["Kinetic Field","Disco Lines","9:13pm","10:28pm"],
+["Kinetic Field","Kaskade","10:31pm","11:57pm"],
+["Circuit Grounds","Fury","1:00pm","2:30pm","with MC Dino"],
+["Circuit Grounds","Madvktm","2:30pm","3:30pm"],
+["Circuit Grounds","Subsonic","3:30pm","4:30pm"],
+["Circuit Grounds","Avello","4:30pm","5:30pm"],
+["Circuit Grounds","Jkyl & Hyde","5:30pm","6:30pm"],
+["Circuit Grounds","Layz","6:30pm","7:30pm"],
+["Circuit Grounds","Alleycvt","7:30pm","8:30pm"],
+["Circuit Grounds","Ray Volpe","8:30pm","9:35pm"],
+["Circuit Grounds","Skull Machine","9:35pm","10:45pm","Black Tiger Sex Machine x Kai Wachi"],
+["Circuit Grounds","Alison Wonderland","10:45pm","12:00am"],
+["Neon Garden","Mai Iachetti","1:00pm","2:30pm"],
+["Neon Garden","Kinahau","2:30pm","4:00pm"],
+["Neon Garden","Miguelle & Tons","4:30pm","5:30pm"],
+["Neon Garden","Luke Dean","5:30pm","7:00pm","B2B George Smeddles, sunset"],
+["Neon Garden","Rossi.","7:00pm","8:30pm"],
+["Neon Garden","Dennis Cruz","8:30pm","10:00pm"],
+["Neon Garden","Franky Rizardo","10:00pm","12:00am"],
+["Stereo Bloom","Alves","1:00pm","2:30pm"],
+["Stereo Bloom","Gabbs","2:30pm","3:30pm"],
+["Stereo Bloom","Greg 99","3:30pm","4:30pm"],
+["Stereo Bloom","Fallon","4:30pm","5:30pm"],
+["Stereo Bloom","Devault","5:30pm","6:45pm","sunset"],
+["Stereo Bloom","Discip","6:45pm","8:00pm"],
+["Stereo Bloom","Roddy Lima","8:00pm","9:15pm"],
+["Stereo Bloom","Ayybo","9:15pm","10:30pm"],
+["Stereo Bloom","Chasewest","10:30pm","12:00am"]
 ];
-const DATA={fri:FRI,sat:SAT};
+const SUN=[
+["Kinetic Field","Esse","1:00pm","2:35pm"],
+["Kinetic Field","AR/CO","2:35pm","3:35pm"],
+["Kinetic Field","Jessica Audiffred","3:35pm","4:35pm"],
+["Kinetic Field","Ian Asher","4:35pm","5:35pm"],
+["Kinetic Field","Slander","5:35pm","6:51pm","sunset"],
+["Kinetic Field","I Hate Models","6:54pm","7:59pm"],
+["Kinetic Field","Alok","8:02pm","9:12pm"],
+["Kinetic Field","Hardwell","9:15pm","10:25pm"],
+["Kinetic Field","Martin Garrix","10:28pm","11:57pm"],
+["Circuit Grounds","Discovery Project","1:10pm","2:25pm"],
+["Circuit Grounds","A Little Sound","2:25pm","3:25pm"],
+["Circuit Grounds","Kaivon","3:25pm","4:35pm"],
+["Circuit Grounds","San Holo","4:35pm","5:25pm","Wholesome Riddim Set"],
+["Circuit Grounds","Of The Trees","5:25pm","6:40pm","sunset"],
+["Circuit Grounds","Meduza","6:40pm","7:45pm"],
+["Circuit Grounds","Maddix","7:45pm","8:45pm"],
+["Circuit Grounds","Deorro","8:45pm","9:50pm","B2B Diesel"],
+["Circuit Grounds","Atliens","9:50pm","10:55pm"],
+["Circuit Grounds","Holy Priest","10:55pm","12:00am"],
+["Neon Garden","Ultrathem","1:00pm","3:00pm"],
+["Neon Garden","SHDW","3:00pm","4:30pm"],
+["Neon Garden","Adrián Mills","4:30pm","6:00pm"],
+["Neon Garden","Marlon Hoffstadt","6:00pm","7:30pm","sunset"],
+["Neon Garden","Boys Noize","7:30pm","9:00pm","B2B Brutalismus"],
+["Neon Garden","KI/KI","9:00pm","10:30pm"],
+["Neon Garden","Klangkuenstler","10:30pm","12:00am"],
+["Stereo Bloom","M81!","1:00pm","2:10pm"],
+["Stereo Bloom","CØNTRA","2:10pm","3:10pm"],
+["Stereo Bloom","Chef Boyarbeatz","3:10pm","4:10pm"],
+["Stereo Bloom","Phrva","4:10pm","5:10pm"],
+["Stereo Bloom","Sippy","5:10pm","6:15pm"],
+["Stereo Bloom","Know Good","6:15pm","7:20pm"],
+["Stereo Bloom","Taiki Nulight","7:20pm","8:30pm"],
+["Stereo Bloom","Ravenscoon","8:30pm","9:40pm"],
+["Stereo Bloom","Boogie T","9:40pm","10:50pm"],
+["Stereo Bloom","Troyboi","10:50pm","12:00am"]
+];
+const DATA={fri:FRI,sat:SAT,sun:SUN};
 
 /* my picks, with the reason */
-const REC={
-"fri|Jacques Greene":"Garage-inflected house with real weight, in the Interplanetary Criminal lineage. He has played every single III Points, so he knows this site.",
-"fri|Eli Escobar":"Jubilee's whole catalog is Miami bass and breaks. Closest thing on the bill to the Chris Lorenzo breakbeat side, played as a hometown set.",
-"fri|Danny Daze":"Miami electro meets the Detroit ghettotech originator. 145 to 160, relentless, bouncy. Hits the same nerve bassline does.",
-"fri|INVT":"Miami duo, live hardware, dub-heavy and bass-forward. Buried at 2:45am on Vertex and most people will never find it.",
-"sat|Coffintexts":"DJ Fuckoff plays fast trancey bouncing techno with donk in it, which is Funk Tribu's bounce routed through Berlin. Early slot, easy to miss.",
-"sat|Nick León":"Dembow and reggaeton skeletons at techno tempo. Hometown-specific, and it feeds straight into KI/KI on the same stage.",
-"sat|Red Axes":"Post-punk instincts run through a club set, which is your Boy Harsher overlap. Four hours, so you can dip in and out.",
-"sat|Bassvictim":"Bratty New York club-pop with Bikini Kill and Le Tigre attitude in a rave costume. 45 minutes, fast, funny.",
-"sat|YHWH Nailgun":"Abrasive noise rock. Nearest thing on this bill to Lambrini Girls or IDLES in temperament.",
-"sat|Machine Girl":"Live breakcore with actual punk-show physicality. The only thing here that gives you the Turnstile release, and far better live than on record.",
-"sat|HAAi":"Breaks and psych-leaning techno. High energy without being generic peak-time.",
-"sat|KETTAMA":"If you take one thing off my list, take this. G-Town bounce, 135 to 140, hard kicks with garage and trance edges, and it closes the festival.",
-"sat|Tiga":"The Le Tigre era attitude, except he plays proper hard techno now instead of trading on nostalgia."};
+const REC={};   // no notes for EDC yet
 
-const NOTE={
-"fri|Vintage Culture":"Styler is the reason to stand there. Vintage Culture solo is commercially soft, so this lands better than a Vintage Culture set and worse than a Styler set.",
-"fri|Odd Mob":"Bouncy Australian house sitting between Chris Lake's groove and KETTAMA's hardness.",
-"fri|Dr. Rubinstein":"Rubinstein plays fast acid rather than kicks-only hard techno, and she pushes the other person up rather than down. Probably the best techno hour of Friday.",
-"fri|Heidi Lawden":"Four-hour slow-burn selector set from doors. Tasteful by design, good as arrival background.",
-"fri|Adam At The Door":"Sits entirely inside Heidi Lawden's four hours.",
-"fri|Honey Dijon":"Closing S3QUENC3. She goes considerably harder late than her reputation suggests.",
-"sat|horsegiirL":"The pig-mask bit is thin. Underneath it the sets are competent bouncy house. Go for the room, not the music.",
-"sat|Underworld":"The legacy live act that still actually plays. Born Slippy in a Miami warehouse is a real moment.",
-"sat|999999999":"Hardest thing on the bill and it is not close. Live acid hardware past 150, closer to Funk Tribu than to de Witte. Now closing RC95 instead of de Witte.",
-"sat|Charlotte de Witte":"Her festival hour has gotten more melodic over the last two years. Temper it against the 2021 version. No longer the closer after the time swap.",
-"sat|VTSS":"Faster and more chaotic than de Witte, and the closest this bill gets to a Sara Landry energy level."};
+const NOTE={};   // no notes for EDC yet
 
 /* ============================================================
    Shared board. Everyone reads and writes one board on the Worker.
@@ -627,12 +577,12 @@ const NOTE={
    ============================================================ */
 const API = "";  // same origin: the API is served at /picks by functions/picks.js
 
-/* Board name comes from the link (#board=miamiii) so one page can run many crews. */
-const BOARD = ((location.hash.match(/board=([A-Za-z0-9_-]{1,32})/) || [])[1] || "miamiii").toLowerCase();
+/* Board name comes from the link (#board=edc) so one page can run many crews. */
+const BOARD = ((location.hash.match(/board=([A-Za-z0-9_-]{1,32})/) || [])[1] || "edc").toLowerCase();
 
-const LS="iiip26-mine", LSN="iiip26-name", LSP="iiip26-pid", LSC="iiip26-cache";
-const LSF="iiip26-follows", LSH="iiip26-hidden", LSW="iiip26-welcomed";
-const LSX="iiip26-left";
+const LS="edc26-mine", LSN="edc26-name", LSP="edc26-pid", LSC="edc26-cache";
+const LSF="edc26-follows", LSH="edc26-hidden", LSW="edc26-welcomed";
+const LSX="edc26-left";
 /* Scoped per crew, so leaving Boston does not mute you on your own crew. */
 function hasLeft(b){
   try{ return (JSON.parse(localStorage.getItem(LSX)||"[]")||[]).includes(b||BOARD); }
@@ -656,18 +606,46 @@ function noteBlocked(j){
 let follows=[], hidden=new Set();
 const PAL=["#E3112A","#1B6EF3","#0C9B52","#F0860B","#8A2BE2","#00A0A8","#D81B8C","#6B4F1D",
             "#1A1A1A","#C4A000","#2E7D8F","#9B1B5A"];
-/* Shapes come off the poster: the III Points triangle first, then diamond, hex,
+/* Marker shapes, your own crew first: triangle, then diamond, hex,
    chevron, square, circle, cross, house. Your own crew always gets the triangle. */
 const SHAPES=["tri","dia","hex","chev","sq","cir","crs","pent"];
 
 /* Doors are 4pm ET both days. October is EDT, so 20:00 UTC. */
-const DOORS={fri:Date.UTC(2026,9,16,20,0,0),sat:Date.UTC(2026,9,17,20,0,0)};
+/* Everything that is specific to one festival. Doors are UTC instants, so the
+   page shows the right local time wherever it is opened. EDC Orlando runs
+   1pm to midnight on three days, and Florida is on EST (UTC-5) by 6 November. */
+const FEST={
+  name:"EDC ORLANDO", year:"2026", city:"Orlando",
+  openHour:13,     // the left edge of the grid, in local festival time
+  span:660,        // minutes from doors to close: 1pm to midnight
+  days:[
+    {id:"fri",short:"FRI",long:"Friday",  date:"NOVEMBER 6",dateShort:"Nov 6",doors:Date.UTC(2026,10,6,18,0,0)},
+    {id:"sat",short:"SAT",long:"Saturday",date:"NOVEMBER 7",dateShort:"Nov 7",doors:Date.UTC(2026,10,7,18,0,0)},
+    {id:"sun",short:"SUN",long:"Sunday",  date:"NOVEMBER 8",dateShort:"Nov 8",doors:Date.UTC(2026,10,8,18,0,0)}
+  ]
+};
+const DAYS=FEST.days.map(d=>d.id);
+const DAYOF={}; FEST.days.forEach(d=>DAYOF[d.id]=d);
+const DOORS={}; FEST.days.forEach(d=>DOORS[d.id]=d.doors);
+
+/* Which day to open on. Live during a day, otherwise the next one, and the
+   last day once it is all over. Nobody should have to find the right tab in
+   the dark. */
+function todayId(){
+  const n=Date.now();
+  for(const d of FEST.days){
+    const m=(n-d.doors)/60000;
+    if(m>=-180&&m<=FEST.span+60)return d.id;
+  }
+  const next=FEST.days.find(d=>d.doors>n);
+  return next?next.id:FEST.days[FEST.days.length-1].id;
+}
 /* A check-in lasts until the set ends (plus a short grace), or 90 minutes,
    whichever comes first. Phones die and people wander off, so a check-in that
    can only be cleared by hand would quietly lie all night. */
 const GRACE=10*60*1000, MAX_LIVE=90*60*1000;
 
-let day="fri", filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false, pullAgain=false, lastPull=0;
+let day=todayId(), filter="all", mine=new Set(), people=[], myName="", online=false, pushT=null, pulling=false, pullAgain=false, lastPull=0;
 
 /* A person is a random id this browser keeps. No accounts, no sign in. */
 const PID=(function(){
@@ -735,67 +713,7 @@ function onGrid(key){
 }
 
 /* Background on acts I know. Not recommendations, just what they are. */
-const INFO={
-"fri|Beltran":"B2B with Ben Sterling. Sterling is the groovier and more restrained of the two, so expect this to sit lower-BPM than a Beltran solo set.",
-"fri|Ghostface Killah":"Wu-Tang, performing Supreme Clientele. One of the best-regarded rap albums of its era and he still performs it properly rather than as a medley.",
-"fri|Bone Thugs-N-Harmony":"Legacy set. Lands or flops depending on which members turn up and how much of it is backing track.",
-"fri|Lil' Kim":"Legacy booking. Short, hits-driven, variable delivery.",
-"fri|Danny Brown":"Live he is genuinely unhinged in a way that connects to why you like IDLES. Short and loud.",
-"fri|Connan Mockasin":"Woozy, slack psych. Deliberately unhurried. The opposite of a dancefloor set.",
-"fri|Men I Trust":"Soft dream pop. Pleasant, very low stakes, good for sitting down.",
-"fri|Purity Ring":"Synth pop, closest thing on the bill to Phantogram. Pretty rather than heavy.",
-"fri|Jane Remover":"Has shifted from hyperpop toward shoegaze and rock lately, which nudges it closer to your band taste. Still inconsistent live.",
-"fri|Flying Lotus":"Full audiovisual show. Technically impressive, low BPM, more watch than dance.",
-"fri|Parcels":"Live, full band, harmonies actually sung rather than backing-tracked. Reliably one of the better live sets anywhere they play.",
-"fri|Tokischa":"Chaotic, short, confrontational. Miami is the right crowd for her.",
-"fri|Mind Enterprises":"Live band setup, Italo and disco bones. Same room as Parcels and L'Imperatrice.",
-"fri|Hamdi":"UK bass and dubstep with sharp tempo shifts. This crowd will not be ready for them, which usually makes his sets better.",
-"fri|Levity":"B2B with Taiki Nulight. The only drum and bass shaped thing on the bill, and it leans bass-house crossover rather than rolling DnB.",
-"fri|Ivy Lab":"Sold as DnB adjacent but it is halftime and downtempo bass. Going in expecting Sub Focus will annoy you.",
-"fri|Mary Droppinz":"Crowd-reading edits selector. Fun, not deep. Good bridge between two bigger sets.",
-"fri|Cloonee":"Tech house that fits your lane on paper. Honest knock: the sets have gotten formulaic and he pulls a rough crowd.",
-"fri|PAWSA":"Competent groove-focused tech house. Nothing wrong with it, nothing that stays with you.",
-"fri|Disco Lines":"Viral edits, built for clips. There is a real DJ in there but the set is not aimed at you.",
-"fri|DJ Harvey":"Four hours around 118 BPM, disco and balearic. A legend, and genuinely not your tempo.",
-"fri|Floating Points":"Four hours. Can reach 140 hard techno by the end, but the first hour is usually slow. High variance, big commitment.",
-"fri|Shanti Celeste":"B2B with Peach. Bright, bubbly, breaks-inflected selector house. Skilled, rarely hard.",
-"fri|Ahmed Spins":"B2B with OMRI. Afro house, mid-tempo, spiritual pacing. Well made and slow.",
-"fri|Maher Daniel":"B2B with Mai Iachetti. Miami house regulars, dependable groove, below your peak-time bar.",
-"fri|Miguelle & Tons":"Mid-tempo melodic house. Filler unless you are already in the room. Saraga is off this one now.",
-"fri|Brunello":"B2B with Rafael. Latin-leaning melodic house. Pleasant, not hard.",
-"fri|Moscoman":"Disco Halal boss. Post-punk instincts in dance music, groovy but mid-tempo.",
-"fri|Bill Patrick":"B2B with Bort. Veteran selectors, long-form and slow-building. Not your tempo.",
-"fri|Maccabiii":"B2B with Pezlo MD. Maccabi House is Adam Ten's crew, so this is the nearest thing to Adam Ten inside the gates.",
-"fri|Taimur":"B2B with Will Buck, both Space residents. They build a room over hours, which suits a club better than a festival slot.",
-"fri|Corridos Ketamina":"Latin club deconstruction. Unpredictable, occasionally excellent, occasionally unlistenable.",
-
-"sat|Blood Orange":"Dev Hynes. Beautiful and slow. Only for you if the quieter TV on the Radio material is what you actually revisit.",
-"sat|Nettspend":"Young rage-rap. Short, loud, chaotic crowd. More about the room than the music.",
-"sat|Tricky":"Live and confrontational, plays very dark and very loud. Nowhere near dance music.",
-"sat|Kelela":"Excellent R&B, and entirely outside your list.",
-"sat|ML Buch":"Quiet, diffuse ambient guitar pop.",
-"sat|rusowsky":"Melodic Spanish alt-pop. Not your world.",
-"sat|Chanel Beads":"Fragmented experimental indie. Shares nothing with your rock list.",
-"sat|Sunn O)))":"Drone metal. The loudest thing at the festival and the least groove-driven music ever made. You said you want a system that hurts, and this is that with no rhythm at all.",
-"sat|Adam Port":"Keinemusik. Big, well built, glacial buildups. The tasteful sunset set you said you would rather skip, executed well.",
-"sat|Four Tet":"Brilliant and unpredictable. Also often euphoric-ambient rather than hard. Coin flip on which set you get.",
-"sat|Daphni":"Caribou's dance alias. Loose, weird, groove-first. Better than his Four Tet-adjacent peers at this, less consistent.",
-"sat|Roman Flügel":"Veteran selector who plays proper electro and acid. Would be a sleeper if he were not likely to get a quiet room.",
-"sat|Whitesquare":"Competent, unremarkable melodic techno. Filler.",
-"sat|Rebolledo":"Cosmic, slow, hypnotic. Not physical.",
-"sat|Willikens & Ivkovic":"Deliberately slow cosmic four-hour set. The precise opposite of what you asked for.",
-"sat|Seth Troxler":"Four hours, historically variable, sometimes self-indulgent. A long wait for a payoff that may not come.",
-"sat|Marco Carola":"B2B with Franky Rizardo. Long-form, low-variance, deliberately monotonous. Some find it hypnotic, you will probably find it flat.",
-"sat|David Vunk":"Raw Italo and electro. Weird enough to be interesting, mid-tempo enough to drop if something harder clashes.",
-"sat|Mystic Bill":"B2B with Artime. Mystic Bill is a real Chicago house and acid veteran. Traditionalist and warm, not hard.",
-"sat|Jinks":"B2B with Romulo Del Castillo, a genuine Miami electro veteran from the Schematic Records era. Historically interesting, likely a quiet room.",
-"sat|DJ Three":"B2B with Sister System. Deep and progressive, more headphones than dancefloor.",
-"sat|Silvie Loto":"B2B with Ms. Mada. Both Miami regulars in the Space network. Solid if the timing works.",
-"sat|KI/KI":"Trance-inflected hard groove. The one act here that touches your trance interest at all.",
-"sat|Interplanetary Criminal":"Bassline and UK garage. Him and Hamdi on one bill is the strongest argument that this festival is in your lane.",
-"sat|MPH":"Genuine bassline rather than the bass-house version of it. Expect one of the sweatiest rooms on site.",
-"sat|Crespi Drum Syndicate":"Live drum ensemble. No idea how it translates to this setting, but it is the only thing like it on the bill."
-};
+const INFO={};   // no notes for EDC yet
 
 /* ===== live check-ins ===== */
 function rowFor(key){
@@ -836,7 +754,7 @@ function since(t){
 /* where the festival clock is right now, in grid minutes, or null if not during a day */
 function nowMinutes(){
   const n=Date.now();
-  for(const d of ["fri","sat"]){
+  for(const d of DAYS){
     const m=(n-DOORS[d])/60000;
     if(m>=-30&&m<=SPAN+30)return {day:d,min:m};
   }
@@ -857,7 +775,7 @@ function clashes(d){
 function clashSet(d){const s=new Set();clashes(d).forEach(c=>{s.add(c.a[1]);s.add(c.b[1]);});return s;}
 
 /* ===== grid ===== */
-const PPM=1.5, SPAN=720, PAD=18, H=SPAN*PPM+PAD*2;
+const PPM=1.5, SPAN=FEST.span, PAD=18, H=SPAN*PPM+PAD*2;
 function railHTML(stick,side){
   let h=`<div class="rail ${stick?"stick":""} ${side}"><div class="hd"></div><div class="track" style="height:${H}px">`;
   for(let t=0;t<=SPAN;t+=60)h+=`<div class="tick" style="top:${t*PPM+PAD}px">${fmt(t).replace(":00","").replace(" ","")}</div>`;
@@ -879,12 +797,11 @@ function renderGrid(){
       const hereNow=liveAt(key,NOW), moved=!!CHANGED[key];
       const cls=["blk"];
       if(dark)cls.push("ink");
-      if(st==="Grand Central")cls.push("dash");
       if(isMine)cls.push("mine"); else if(hasNote)cls.push("rec");
       if(onGrid(key))cls.push("on");
       if(hereNow.length)cls.push("livehere");
       if(moved)cls.push("moved");
-      h+=`<button class="${cls.join(" ")}" data-n="${esc(r[1])}" style="background:${st==="Grand Central"?"rgba(246,205,166,.75)":c};top:${s*PPM+PAD}px;height:${(e-s)*PPM-3}px">`;
+      h+=`<button class="${cls.join(" ")}" data-n="${esc(r[1])}" style="background:${c};top:${s*PPM+PAD}px;height:${(e-s)*PPM-3}px">`;
       if(cs.has(r[1]))h+=`<span class="cl"></span>`;
       if(isMine)h+=`<span class="star">&#9733;</span>`; else if(isRec)h+=`<span class="star pickdot">&#9679;</span>`;
       if(moved)h+=`<span class="movedtag" title="Time changed">\u21BB</span>`;
@@ -914,7 +831,7 @@ function renderGrid(){
 
 /* ===== panels ===== */
 function renderPanels(){
-  document.getElementById("runhd").textContent=(day==="fri"?"Friday":"Saturday")+" running order";
+  document.getElementById("runhd").textContent=DAYOF[day].long+" running order";
   const rows=DATA[day].filter(r=>mine.has(k(day,r[1]))).sort((a,b)=>T(a[2])-T(b[2]));
   const cs=clashSet(day);
   let h="";
@@ -934,13 +851,13 @@ function renderPanels(){
 
   const cl=clashes(day);
   let c="";
-  if(!cl.length)c=`<div class="card"><div class="t3">No overlaps on your ${day==="fri"?"Friday":"Saturday"} picks.</div></div>`;
+  if(!cl.length)c=`<div class="card"><div class="t3">No overlaps on your ${DAYOF[day].long} picks.</div></div>`;
   cl.forEach(x=>{
     let v;
     if(x.same)v="Same stage, so this is a transcription error rather than a real conflict.";
     else if(x.full)v="One sits fully inside the other. Pick one.";
     else if(x.ov>=45)v=`${x.ov} minutes gone. Catching meaningful parts of both is not realistic.`;
-    else if(x.ov>=20)v=`${x.ov} minute overlap. Doable if you leave one early, though Mana Wynwood runs five blocks and stage-to-stage walks with crowd have been 5 to 10 minutes.`;
+    else if(x.ov>=20)v=`${x.ov} minute overlap. Doable if you leave one early, though Tinker Field stage-to-stage walks with crowd run 5 to 10 minutes.`;
     else v=`${x.ov} minutes. Shave the front or back and you keep both, assuming the stages are near each other.`;
     c+=`<div class="card warn"><div class="t1">${esc(x.a[1])} vs ${esc(x.b[1])}</div><div class="t2">${sh(T(x.a[2]))}&ndash;${sh(T(x.a[3]))} ${esc(x.a[0])} &nbsp;/&nbsp; ${sh(T(x.b[2]))}&ndash;${sh(T(x.b[3]))} ${esc(x.b[0])}</div><div class="t3">${v}</div></div>`;
   });
@@ -996,7 +913,7 @@ function renderPanels(){
 
   document.getElementById("fine").innerHTML=
     "Board <b>"+esc(BOARD)+"</b>. Everyone on this link shares it, nobody signs in. "+
-    "Grid transcribed by hand from the two official III Points posters, so spot-check anything you are planning the night around against the festival app. "+
+    "Grid transcribed by hand from the three official set-time posters, so spot-check anything you are planning the night around against the festival app. "+
     "Dotted outlines are suggestions, solid outlines are your own picks. The page keeps working with no signal once it has loaded; changes made offline save when you are back on.";
 }
 
@@ -1093,10 +1010,10 @@ function openPerson(pid){
     h+='<p>Nothing picked yet.</p>';
   }else{
     let shared=0;
-    const body=["fri","sat"].map(d=>{
+    const body=DAYS.map(d=>{
       const rows=DATA[d].filter(r=>p.sets.has(k(d,r[1]))).sort((a,b)=>T(a[2])-T(b[2]));
       if(!rows.length)return "";
-      let out='<div class="daylab">'+(d==="fri"?"Friday 16":"Saturday 17")+'</div>';
+      let out='<div class="daylab">'+esc(DAYOF[d].long+" "+DAYOF[d].dateShort.replace(/^\w+ /,""))+'</div>';
       rows.forEach(r=>{
         const both=p.person!==PID&&mine.has(k(d,r[1]));
         if(both)shared++;
@@ -1409,7 +1326,26 @@ function renderMap(){
   const el=document.getElementById("mapPanel");
   if(!el||el.hidden)return;
   const now=Date.now();
-  if(mapImgOK){ renderMapImage(el,now); return; }
+  if(mapImgOK&&MAP_READY()){ renderMapImage(el,now); return; }
+  if(!Object.keys(MAP).length){
+    /* No site plan for this festival. Give the stages, which is what the map
+       was for, without pretending to know where anything is. */
+    let list="";
+    Object.keys(ST).forEach(stage=>{
+      const bd=stageBadges(stage,now);
+      list+='<button class="stagerow" data-stage="'+esc(stage)+'" style="border-left:7px solid '+ST[stage][0]+'">'+
+        '<span>'+esc(stage)+'</span>'+
+        (bd.star?'<i class="sr">\u2605</i>':'')+
+        (bd.here?'<i class="sn">'+bd.here+' here</i>':'')+'</button>';
+    });
+    el.innerHTML='<div class="card">'+
+      '<div class="whead"><span class="t1">Stages</span><button class="wx" id="mapClose" aria-label="Close">&times;</button></div>'+
+      '<div class="t2">Tap a stage for what is on, who is there and who is down for what.</div>'+
+      '<div class="stagelist">'+list+'</div>'+
+      '<div class="t2" style="margin-top:11px">No site map loaded for '+esc(FEST.name)+' yet. Drop the official map into public/ and give me the stage positions and this becomes the real thing.</div>'+
+      '</div>';
+    return;
+  }
   let boxes="";
   Object.keys(MAP).forEach(stage=>{
     const [x,y,w,h]=MAP[stage];
@@ -1468,7 +1404,7 @@ function openStage(stage){
   stageOpen=stage;
   const on=onNowAt(stage), here=liveAtStage(stage), picks=picksAtStage(stage);
   const all=setsAt(stage);
-  let h='<h3>'+esc(stage)+'</h3><div class="meta">'+all.length+(all.length===1?" set":" sets")+' on '+(day==="fri"?"Friday":"Saturday")+'</div>';
+  let h='<h3>'+esc(stage)+'</h3><div class="meta">'+all.length+(all.length===1?" set":" sets")+' on '+esc(DAYOF[day].long)+'</div>';
 
   if(on){
     h+='<div class="t1" style="margin-top:12px">On now</div>'+
@@ -1707,7 +1643,7 @@ function renderNow(){
   const mineAt=myCheckIn();
   let head='<div class="whead"><span class="t1">Where everyone is</span><button class="wx" id="nowClose" aria-label="Close">&times;</button></div>';
   const nm=nowMinutes();
-  head+='<div class="t2">'+(nm?("Festival clock: "+(nm.day==="fri"?"Friday":"Saturday")+" "+fmt(Math.max(0,Math.round(nm.min))))
+  head+='<div class="t2">'+(nm?("Festival clock: "+DAYOF[nm.day].long+" "+fmt(Math.max(0,Math.round(nm.min))))
     :"Not during the festival right now. Check-ins still work for testing.")+'</div>';
   card.innerHTML=head;
   el.appendChild(card);
@@ -1880,12 +1816,12 @@ function toggle(name,on){
 
 /* ===== export ===== */
 function myText(){
-  let o="III POINTS 2026 — Mana Wynwood\n";
-  ["fri","sat"].forEach(d=>{
+  let o=FEST.name+" "+FEST.year+"\n";
+  DAYS.forEach(d=>{
     const rows=DATA[d].filter(r=>mine.has(k(d,r[1]))).sort((a,b)=>T(a[2])-T(b[2]));
     if(!rows.length)return;
     const cs=clashSet(d);
-    o+="\n"+(d==="fri"?"FRIDAY OCT 16":"SATURDAY OCT 17")+"\n";
+    o+="\n"+DAYOF[d].long.toUpperCase()+" "+DAYOF[d].date+"\n";
     rows.forEach(r=>{o+=sh(T(r[2]))+"  "+r[1]+(r[4]?" "+r[4]:"")+"  ("+r[0]+")"+(cs.has(r[1])?"  [CLASH]":"")+"\n";});
     const cl=clashes(d);
     if(cl.length)o+="Clashes: "+cl.map(c=>c.a[1]+" / "+c.b[1]).join(" · ")+"\n";
@@ -1984,13 +1920,21 @@ document.getElementById("sheet").addEventListener("change",e=>{
   checkIn(c.s,c.fire,{p:c.p||null,n:n.value});
 });
 document.getElementById("scrim").addEventListener("click",closeSheet);
+/* Everything outside the grid that has to agree with which day is showing:
+   the big title, the date under it, the lit tab and the accent colour. Called
+   at boot as well as on a tap, because the page no longer always opens on the
+   first day and the markup must not be allowed to disagree with `day`. */
+function setDayChrome(){
+  const d=DAYOF[day];
+  document.querySelectorAll("#dayseg button[data-day]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.day===day)));
+  DAYS.forEach(id=>document.body.classList.toggle("d-"+id,id===day));
+  document.getElementById("dayBig").textContent=d.long.toUpperCase();
+  document.getElementById("dayDate").textContent=d.date;
+}
 document.getElementById("dayseg").addEventListener("click",e=>{
   const b=e.target.closest("button[data-day]"); if(!b)return;
   day=b.dataset.day;
-  document.querySelectorAll("#dayseg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
-  document.body.classList.toggle("sat",day==="sat");
-  document.getElementById("dayBig").textContent=day==="fri"?"FRIDAY":"SATURDAY";
-  document.getElementById("dayDate").textContent=day==="fri"?"OCTOBER 16":"OCTOBER 17";
+  setDayChrome();
   document.getElementById("scroll").scrollLeft=0; window.scrollTo(0,0); draw();
 });
 function setFilter(v){
@@ -2105,8 +2049,8 @@ document.getElementById("newCrew").addEventListener("keydown",e=>{
   if(e.key==="Enter")goToCrew(document.getElementById("newCrew").value);
 });
 document.getElementById("toMain").addEventListener("click",()=>{
-  if(BOARD==="miamiii"){toast("You are already on the main crew");return;}
-  location.hash="board=miamiii";
+  if(BOARD==="edc"){toast("You are already on the main crew");return;}
+  location.hash="board=edc";
 });
 document.getElementById("nameIn").addEventListener("input",e=>{
   myName=e.target.value.slice(0,24);
@@ -2170,6 +2114,9 @@ function draw(){renderGrid();renderPanels();renderNow();renderMap();renderRallyB
 })();
 cacheLoad();
 document.getElementById("nameIn").value=myName;
+document.getElementById("dayseg").innerHTML=FEST.days.map(d=>
+  '<button data-day="'+d.id+'" aria-pressed="'+(d.id===day)+'">'+esc(d.short)+'</button>').join("");
+setDayChrome();
 document.getElementById("boardName").textContent=BOARD;
 syncLeaveBtn();
 showWelcome();

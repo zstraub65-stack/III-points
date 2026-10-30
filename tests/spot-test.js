@@ -1,4 +1,4 @@
-/* Friday night, Hamdi is on. Zack checks in, picks a spot, adds a note,
+/* Friday night, Levity is on. Zack checks in, picks a spot, adds a note,
    and sees where his crew is standing. */
 const fs = require("fs");
 const path=require("path");
@@ -8,18 +8,18 @@ const WORKER=path.join(ROOT,"worker-entry.js");
 const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
-const DOORS_FRI = Date.UTC(2026, 9, 16, 20, 0, 0);
-const at = (h, m) => DOORS_FRI + ((h - 16) * 60 + m) * 60000;
-let CLOCK = at(23, 30);                      // 11:30pm Friday
+const DOORS_FRI = Date.UTC(2026, 10, 6, 18, 0, 0);
+const at = (h, m) => DOORS_FRI + ((h - 13) * 60 + m) * 60000;
+let CLOCK = at(22, 0);                      // 10:00pm Friday, Levity is on
 
 const board = {
   people: [
-    { person: "zack", name: "Zack", sets: ["fri|Hamdi"], at: { s: "fri|Hamdi", t: at(23, 20), fire: false } },
+    { person: "zack", name: "Zack", sets: ["fri|Levity"], at: { s: "fri|Levity", t: at(21, 50), fire: false } },
     // Vrushi is back-left with a landmark
-    { person: "vru", name: "Vrushi", sets: [], at: { s: "fri|Hamdi", t: at(23, 25), fire: true, p: [0, 2], n: "by the sound booth" } },
+    { person: "vru", name: "Vrushi", sets: [], at: { s: "fri|Levity", t: at(21, 55), fire: true, p: [0, 2], n: "by the sound booth" } },
     // five people in one cell, to check the "+N" overflow
     ...["a", "b", "c", "d", "e"].map((x, i) => ({
-      person: "p" + x, name: "Pal" + i, sets: [], at: { s: "fri|Hamdi", t: at(23, 10), fire: false, p: [2, 1] }
+      person: "p" + x, name: "Pal" + i, sets: [], at: { s: "fri|Levity", t: at(21, 40), fire: false, p: [2, 1] }
     }))
   ]
 };
@@ -27,7 +27,7 @@ const board = {
 const posts = [];
 const dom = new JSDOM(html, {
   runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     const RealDate = w.Date;
     w.Date = class extends RealDate {
@@ -43,13 +43,13 @@ const dom = new JSDOM(html, {
         if (me && "at" in body) me.at = body.at;
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
       }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: b, people: b === "miamiii" ? board.people : [] }) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: b, people: b === "edc" ? board.people : [] }) });
     };
-    try { w.localStorage.clear(); w.localStorage.setItem("iiip26-pid", "zack"); } catch (e) {}
+    try { w.localStorage.clear(); w.localStorage.setItem("edc26-pid", "zack"); } catch (e) {}
   }
 });
 const w = dom.window, d = w.document;
-const open = () => { d.querySelector('.blk[data-n="Hamdi"]').click(); };
+const open = () => { d.querySelector('.blk[data-n="Levity"]').click(); };
 const cells = () => [...d.querySelectorAll("#sheet .cell")];
 /* mutate the fixture AND the page's own copy, which pull() owns */
 const setMine = v => {
@@ -65,7 +65,7 @@ const ck = (label, got, want) => {
 };
 
 setTimeout(() => {
-  console.log("=== sheet for Hamdi, I am checked in, no spot set yet");
+  console.log("=== sheet for Levity, I am checked in, no spot set yet");
   open();
   ck("grid rendered", cells().length, 16);
   ck("stage label pinned at top", d.querySelector("#sheet .stagebar").textContent, "STAGE");
@@ -94,7 +94,7 @@ setTimeout(() => {
     ck("position sent", JSON.stringify(p.at.p), "[2,1]");
     ck("note sent", p.at.n, "left of the rail");
     ck("picks not touched", "sets" in p, false);
-    ck("timer not reset by moving", p.at.t, at(23, 20));
+    ck("timer not reset by moving", p.at.t, at(21, 50));
 
     open();
     ck("my cell highlighted", d.querySelectorAll("#sheet .cell.me").length, 1);
@@ -107,10 +107,10 @@ setTimeout(() => {
       const p2 = posts[posts.length - 1];
       ck("position cleared", "p" in p2.at, false);
       ck("note kept", p2.at.n, "left of the rail");
-      ck("still checked in", p2.at.s, "fri|Hamdi");
+      ck("still checked in", p2.at.s, "fri|Levity");
 
       console.log("\n=== going-off toggle must not wipe the spot");
-      setMine({ s: "fri|Hamdi", t: at(23, 20), fire: false, p: [1, 3], n: "near the bar" });
+      setMine({ s: "fri|Levity", t: at(21, 50), fire: false, p: [1, 3], n: "near the bar" });
       open();
       d.querySelector('#sheet button[data-fire]').click();
       setTimeout(() => {

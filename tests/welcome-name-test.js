@@ -23,7 +23,7 @@ const posts = [];
 let store = {};
 function boot(hash, seed) {
   posts.length = 0;
-  store = Object.assign({ "iiip26-pid": "nico" }, seed || {});
+  store = Object.assign({ "edc26-pid": "nico" }, seed || {});
   const dom = new JSDOM(html, {
     virtualConsole: quiet(),
     runScripts: "dangerously",
@@ -31,7 +31,7 @@ function boot(hash, seed) {
     beforeParse(w) {
       w.fetch = (u, o) => {
         if (o && o.method === "POST") { posts.push(JSON.parse(o.body)); return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) }); }
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "miamiii", people: [] }) });
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "edc", people: [] }) });
       };
       try { w.localStorage.clear(); Object.entries(store).forEach(([k, v]) => w.localStorage.setItem(k, v)); } catch (e) {}
     }
@@ -53,7 +53,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   ck("modal shows", !d.getElementById("welcome").hidden, true);
   ck("asks for their name, not a crew name", d.getElementById("wName").placeholder, "your name");
   ck("crew field is not shown up front", d.getElementById("wCrewBox").hidden, true);
-  ck("primary button names the crew", d.getElementById("wJoin").textContent, "Join miamiii");
+  ck("primary button names the crew", d.getElementById("wJoin").textContent, "Join edc");
 
   console.log("\n=== they type their name and join");
   d.getElementById("wName").value = "Nico";
@@ -61,10 +61,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await wait(900);
   const named = posts.find(p => p.name === "Nico");
   ck("name reaches the server", !!named, true);
-  ck("stored locally", w.localStorage.getItem("iiip26-name"), "Nico");
+  ck("stored locally", w.localStorage.getItem("edc26-name"), "Nico");
   ck("Crews panel field agrees", d.getElementById("nameIn").value, "Nico");
   ck("modal closed", d.getElementById("welcome").hidden, true);
-  ck("will not nag again", w.localStorage.getItem("iiip26-welcomed"), "1");
+  ck("will not nag again", w.localStorage.getItem("edc26-welcomed"), "1");
   dom.window.close();
 
   console.log("\n=== empty name is refused, nothing is silently lost");
@@ -74,7 +74,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await wait(400);
   ck("modal stays open", d.getElementById("welcome").hidden, false);
   ck("no name posted", posts.filter(p => p.name).length, 0);
-  ck("nothing marked as welcomed yet", w.localStorage.getItem("iiip26-welcomed"), null);
+  ck("nothing marked as welcomed yet", w.localStorage.getItem("edc26-welcomed"), null);
 
   console.log("\n=== the different-group path still works, and keeps the name");
   d.getElementById("wName").value = "Bethany";
@@ -83,12 +83,12 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   d.getElementById("wCrew").value = "Drum Boston";
   d.getElementById("wMake").click();
   await wait(900);
-  ck("name saved before navigating", w.localStorage.getItem("iiip26-name"), "Bethany");
+  ck("name saved before navigating", w.localStorage.getItem("edc26-name"), "Bethany");
   ck("slugged and moved to the new crew", w.location.hash, "#board=drum-boston");
   dom.window.close();
 
   console.log("\n=== a returning person who opens it from Crews");
-  dom = boot("", { "iiip26-name": "Zack", "iiip26-welcomed": "1" }); w = dom.window; d = w.document;
+  dom = boot("", { "edc26-name": "Zack", "edc26-welcomed": "1" }); w = dom.window; d = w.document;
   await wait(1200);
   ck("not shown unprompted", d.getElementById("welcome").hidden, true);
   d.getElementById("crewsBtn").click();

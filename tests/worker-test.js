@@ -36,11 +36,11 @@ const call = (kv, method, board, body) =>
 (async () => {
   // --- migration from the live per-person layout
   const legacy = {
-    "b:miamiii:zack": JSON.stringify({ person: "zack", name: "Zack", sets: ["fri|Hamdi"], updated: 1 }),
-    "b:miamiii:winston": JSON.stringify({ person: "winston", name: "Winston", sets: ["sat|VTSS"], updated: 2 })
+    "b:edc:zack": JSON.stringify({ person: "zack", name: "Zack", sets: ["fri|Levity"], updated: 1 }),
+    "b:edc:winston": JSON.stringify({ person: "winston", name: "Winston", sets: ["sat|Franky Rizardo"], updated: 2 })
   };
   const kv = makeKV(legacy);
-  let r = await call(kv, "GET", "miamiii");
+  let r = await call(kv, "GET", "edc");
   let j = await r.json();
   console.log("MIGRATION");
   console.log("  people carried over:", j.people.map(p => p.name).join(", "));
@@ -48,13 +48,13 @@ const call = (kv, method, board, body) =>
   console.log("  ops:", JSON.stringify(kv.ops));
 
   const before = { ...kv.ops };
-  await call(kv, "GET", "miamiii");
+  await call(kv, "GET", "edc");
   const listsAfter = kv.ops.list - before.list;
   console.log("  further reads cost extra list ops:", listsAfter, listsAfter === 0 ? "(good)" : "(BAD)");
 
   // --- steady state cost
   const kv2 = makeKV();
-  await call(kv2, "POST", "t", { person: "a", name: "A", sets: ["fri|Hamdi"] });
+  await call(kv2, "POST", "t", { person: "a", name: "A", sets: ["fri|Levity"] });
   const base = { ...kv2.ops };
   for (let i = 0; i < 10; i++) await call(kv2, "GET", "t");
   const d = { get: kv2.ops.get - base.get, list: kv2.ops.list - base.list };
@@ -63,15 +63,15 @@ const call = (kv, method, board, body) =>
 
   // --- two people writing do not clobber each other
   const kv3 = makeKV();
-  await call(kv3, "POST", "t", { person: "a", name: "A", sets: ["fri|Hamdi"] });
-  await call(kv3, "POST", "t", { person: "b", name: "B", sets: ["sat|VTSS"] });
+  await call(kv3, "POST", "t", { person: "a", name: "A", sets: ["fri|Levity"] });
+  await call(kv3, "POST", "t", { person: "b", name: "B", sets: ["sat|Franky Rizardo"] });
   j = await (await call(kv3, "GET", "t")).json();
   console.log("\nCONCURRENT WRITERS");
   console.log("  both present:", j.people.length === 2, j.people.map(p => p.name).join(","));
-  await call(kv3, "POST", "t", { person: "a", name: "A", sets: ["fri|Hamdi", "sat|KETTAMA"] });
+  await call(kv3, "POST", "t", { person: "a", name: "A", sets: ["fri|Levity", "sat|Kaskade"] });
   j = await (await call(kv3, "GET", "t")).json();
   const a = j.people.find(p => p.person === "a"), b = j.people.find(p => p.person === "b");
-  console.log("  A updated:", a.sets.length === 2, "| B untouched:", b.sets[0] === "sat|VTSS");
+  console.log("  A updated:", a.sets.length === 2, "| B untouched:", b.sets[0] === "sat|Franky Rizardo");
 
   // --- leaving
   await call(kv3, "POST", "t", { person: "b", leave: true });
@@ -79,7 +79,7 @@ const call = (kv, method, board, body) =>
   console.log("  after B leaves:", j.people.map(p => p.person).join(",") || "(empty)");
 
   // --- boards stay separate
-  await call(kv3, "POST", "boston", { person: "c", name: "C", sets: ["sat|Underworld"] });
+  await call(kv3, "POST", "boston", { person: "c", name: "C", sets: ["sat|Alison Wonderland"] });
   const t = await (await call(kv3, "GET", "t")).json();
   const bos = await (await call(kv3, "GET", "boston")).json();
   console.log("\nISOLATION");
@@ -89,7 +89,7 @@ const call = (kv, method, board, body) =>
   console.log("\nINPUT HANDLING");
   console.log("  no board ->", (await (await call(kv3, "GET", "")).json()).error);
   console.log("  no person ->", (await (await call(kv3, "POST", "t", { name: "x" })).json()).error);
-  const nasty = await call(kv3, "POST", "t", { person: "x", name: "<script>bad</script>", sets: ["fri|Hamdi", 42, "y".repeat(200)] });
+  const nasty = await call(kv3, "POST", "t", { person: "x", name: "<script>bad</script>", sets: ["fri|Levity", 42, "y".repeat(200)] });
   console.log("  dirty payload accepted:", (await nasty.json()).ok);
   j = await (await call(kv3, "GET", "t")).json();
   const x = j.people.find(p => p.person === "x");

@@ -43,14 +43,14 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await wait(1300);
   let d = a.dom.window.document;
   ck("no script errors", a.errs, []);
-  ck("defaults to the main crew", d.getElementById("boardName").textContent, "miamiii");
+  ck("defaults to the main crew", d.getElementById("boardName").textContent, "edc");
   ck("newcomer is prompted", !d.getElementById("welcome").hidden, true);
-  ck("prompt names the crew they landed on", /miamiii/.test(d.getElementById("welcome").innerHTML), true);
-  ck("grid rendered", d.querySelectorAll(".blk").length > 100, true);
+  ck("prompt names the crew they landed on", /edc/.test(d.getElementById("welcome").innerHTML), true);
+  ck("grid rendered", d.querySelectorAll(".blk").length > 30, true);
   a.dom.window.close();
 
   console.log("\n=== a crew link, returning visitor");
-  a = boot("https://iii-points.zstraub65.workers.dev/#board=boston-crew", { "iiip26-welcomed": "1" });
+  a = boot("https://iii-points.zstraub65.workers.dev/#board=boston-crew", { "edc26-welcomed": "1" });
   await wait(1300);
   d = a.dom.window.document;
   ck("no script errors", a.errs, []);

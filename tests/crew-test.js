@@ -10,12 +10,12 @@ const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
 const BOARDS = {
-  miamiii: [
-    { person: "zack", name: "Zack", sets: ["fri|Hamdi", "sat|KETTAMA"] },
-    { person: "winston", name: "Winston", sets: ["fri|Parcels"] }
+  edc: [
+    { person: "zack", name: "Zack", sets: ["fri|Levity", "sat|Kaskade"] },
+    { person: "winston", name: "Winston", sets: ["fri|Afrojack"] }
   ],
-  boston: [{ person: "bos1", name: "Dana", sets: ["fri|Hamdi", "sat|VTSS"] }],
-  stpete: [{ person: "sp1", name: "Marco", sets: ["sat|KETTAMA"] }]
+  boston: [{ person: "bos1", name: "Dana", sets: ["fri|Levity", "sat|Franky Rizardo"] }],
+  stpete: [{ person: "sp1", name: "Marco", sets: ["sat|Kaskade"] }]
 };
 
 const writes = [];
@@ -23,7 +23,7 @@ const errs = [];
 
 const dom = new JSDOM(html, {
   runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     w.addEventListener("error", e => errs.push(String(e.error || e.message)));
     w.fetch = (url, opts) => {
@@ -69,14 +69,14 @@ setTimeout(() => {
     hideBtn.click();
 
     // tapping a set must only ever write to the home crew
-    d.querySelector('.blk[data-n="Tokischa"]').click();
+    d.querySelector('.blk[data-n="Afrojack"]').click();
     d.querySelector('#sheet button[data-go="1"]').click();
 
     setTimeout(() => {
       console.log("POST targets:", writes.map(x => x.board));
-      console.log("only ever wrote to the home crew:", writes.every(x => x.board === "miamiii"));
+      console.log("only ever wrote to the home crew:", writes.every(x => x.board === "edc"));
       const unf = [...d.querySelectorAll("button[data-unfollow]")].map(b => b.dataset.unfollow);
-      console.log("unfollow offered for:", unf, "| home crew not unfollowable:", !unf.includes("miamiii"));
+      console.log("unfollow offered for:", unf, "| home crew not unfollowable:", !unf.includes("edc"));
       w.close();
     }, 900);
   }, 400);

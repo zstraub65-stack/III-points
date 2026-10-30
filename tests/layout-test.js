@@ -45,7 +45,7 @@ setTimeout(() => {
     const want = startMin * PPM + PAD;
     console.log(name + ": top", px(el), "expected", want, "|", px(el) === want ? "correct" : "WRONG");
   };
-  check("Ackdaddy", 0);            // 4:00pm, first slot of the day
-  check("Parcels", (20 * 60) + 45 - (16 * 60));  // 8:45pm
+  check("Zack Martino", 0);                      // 1:00pm, first slot of the day
+  check("Levity", (21 * 60) + 35 - (13 * 60));   // 9:35pm
   dom.window.close();
 }, 1300);

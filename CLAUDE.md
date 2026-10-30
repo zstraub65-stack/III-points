@@ -4,8 +4,11 @@ A shared set-times grid for a music festival. One self-contained HTML page plus 
 Cloudflare Worker that stores everyone's picks and live check-ins. No accounts, no
 build step, no framework.
 
-Currently hard-wired to III Points 2026 (Miami, 16–17 Oct 2026). The active project
-is generalising it to any festival. Read `HANDOFF.md` before starting that work.
+Currently set up for EDC Orlando 2026 (Tinker Field, 6–8 Nov 2026): three days,
+four stages, 107 sets, doors 1pm to midnight. It ran III Points 2026 before that.
+The festival lives in one `FEST` object near the top of the page rather than in
+scattered constants; finishing that generalisation is the active project. Read
+`HANDOFF.md` before starting it.
 
 - Live: https://iii-points.zstraub65.workers.dev
 - Repo: https://github.com/zstraub65-stack/III-points
@@ -13,7 +16,7 @@ is generalising it to any festival. Read `HANDOFF.md` before starting that work.
 ## Layout
 
 ```
-public/index.html   the entire app, ~105 KB, no build step
+public/index.html   the entire app, ~124 KB, no build step
 worker-entry.js     /picks API; everything else falls through to static assets
 wrangler.jsonc      config, including the KV binding (never use the dashboard)
 tests/              node + jsdom, run with `npm test`
@@ -21,7 +24,7 @@ tests/              node + jsdom, run with `npm test`
 
 ## Hard rules
 
-1. **Run `npm test` before and after every change.** 13 files, all green at last
+1. **Run `npm test` before and after every change.** 20 files, all green at last
    commit. jsdom drives the real `public/index.html` with a frozen festival
    clock. A change that breaks a test is a regression until proven otherwise;
    several times the test was right and the code was wrong, and twice it was the
@@ -37,15 +40,28 @@ tests/              node + jsdom, run with `npm test`
 4. **POST /picks is a partial update.** Only the fields present in the body are
    written. Never send a whole-person object; it will clobber a concurrent
    check-in or someone's picks.
-5. **Don't invent set descriptions.** 149 of 231 sets have no note on purpose.
-   Blank means unknown, not missing.
+5. **Don't invent set descriptions.** Most sets have no note on purpose. Blank
+   means unknown, not missing. For EDC the only notes that exist are the ones
+   printed on the posters: B2B pairings, aliases, sunset markers. `REC`, `NOTE`
+   and `INFO` are deliberately empty.
 6. **The official festival map is the owner's file, not Claude's to commit.**
    The Map tab overlays tap targets on it at normalised coordinates in
    `MAPIMG`. The page probes `MAP_SRC_TRY` for the filename, because a phone
-   upload may arrive as `.jpeg`, `.png` or uppercase. When no image is found
-   it falls back to a drawn schematic, so both paths must keep working.
+   upload may arrive as `.jpeg`, `.png` or uppercase. Both the image and the
+   no-image paths must keep working: with no image, or an image but no
+   coordinates, the tab falls back to a tappable stage list. There is no EDC
+   map file in the repo yet, so the list is what ships today.
 7. **`wrangler.jsonc` holds all config.** The owner works from a phone much of
    the time, where the Cloudflare dashboard is close to unusable.
+8. **The page opens on the day you are standing in.** `todayId()` picks it:
+   live during a day (from three hours before doors to an hour after close),
+   otherwise the next day, and the last day once it is over. Never reintroduce
+   a hard-wired starting day. Reading the right tab in a dark field at 2am is
+   not a thing to ask of anyone.
+9. **Changing festival means changing `FEST`, the schedule arrays, `ST` and the
+   storage prefix together.** The prefix (`edc26-`) and default board (`edc`)
+   namespace everyone's picks; bumping them is a deliberate reset, not a
+   rename, and it is how a new festival starts clean.
 
 ## Deploying
 

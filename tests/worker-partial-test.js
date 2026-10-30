@@ -26,24 +26,24 @@ const get = async (kv, b) => (await (await call(kv, "GET", b)).json()).people;
 (async () => {
   const kv = makeKV();
 
-  await call(kv, "POST", "t", { person: "a", name: "Zack", sets: ["fri|Hamdi", "sat|KETTAMA"] });
+  await call(kv, "POST", "t", { person: "a", name: "Zack", sets: ["fri|Levity", "sat|Kaskade"] });
   let p = (await get(kv, "t"))[0];
   console.log("1. picks saved:", p.sets.length, "sets | at:", p.at);
 
   // check in WITHOUT sending sets
-  await call(kv, "POST", "t", { person: "a", at: { s: "fri|Hamdi", t: 1000, fire: true } });
+  await call(kv, "POST", "t", { person: "a", at: { s: "fri|Levity", t: 1000, fire: true } });
   p = (await get(kv, "t"))[0];
   console.log("2. after check-in -> sets still there:", p.sets.length === 2,
     "| name kept:", p.name === "Zack", "| at:", JSON.stringify(p.at));
 
   // change picks WITHOUT sending at
-  await call(kv, "POST", "t", { person: "a", name: "Zack", sets: ["fri|Hamdi", "sat|KETTAMA", "sat|VTSS"] });
+  await call(kv, "POST", "t", { person: "a", name: "Zack", sets: ["fri|Levity", "sat|Kaskade", "sat|Franky Rizardo"] });
   p = (await get(kv, "t"))[0];
-  console.log("3. after editing picks -> check-in survived:", p.at && p.at.s === "fri|Hamdi",
+  console.log("3. after editing picks -> check-in survived:", p.at && p.at.s === "fri|Levity",
     "| sets now:", p.sets.length);
 
   // move to another set
-  await call(kv, "POST", "t", { person: "a", at: { s: "fri|Levity", t: 2000 } });
+  await call(kv, "POST", "t", { person: "a", at: { s: "fri|Wooli", t: 2000 } });
   p = (await get(kv, "t"))[0];
   console.log("4. moved to:", p.at.s, "| fire reset:", p.at.fire === false);
 
@@ -58,11 +58,11 @@ const get = async (kv, b) => (await (await call(kv, "GET", b)).json()).people;
   console.log("6. junk check-in stored as:", p.at);
 
   // two people check in independently
-  await call(kv, "POST", "t", { person: "b", name: "Vrushi", sets: ["fri|Parcels"] });
-  await call(kv, "POST", "t", { person: "a", at: { s: "sat|VTSS", t: 3000 } });
-  await call(kv, "POST", "t", { person: "b", at: { s: "sat|VTSS", t: 3100, fire: true } });
+  await call(kv, "POST", "t", { person: "b", name: "Vrushi", sets: ["fri|Afrojack"] });
+  await call(kv, "POST", "t", { person: "a", at: { s: "sat|Franky Rizardo", t: 3000 } });
+  await call(kv, "POST", "t", { person: "b", at: { s: "sat|Franky Rizardo", t: 3100, fire: true } });
   const all = await get(kv, "t");
-  console.log("7. both at VTSS:", all.filter(x => x.at && x.at.s === "sat|VTSS").length === 2,
+  console.log("7. both at Franky Rizardo:", all.filter(x => x.at && x.at.s === "sat|Franky Rizardo").length === 2,
     "| b still has picks:", all.find(x => x.person === "b").sets.length === 1);
 
   /* A cold board costs exactly one list(), the legacy-migration probe, and

@@ -8,24 +8,24 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
 const people = [
-  { person: "zack", name: "Zack", sets: ["fri|Hamdi", "fri|Levity"], at: null },
-  { person: "v", name: "Vrushi", sets: ["fri|Hamdi"], at: null },
-  { person: "s", name: "Sumit", sets: ["fri|Hamdi"], at: null },
-  { person: "n", name: "Nicolas", sets: ["fri|Levity"], at: null }
+  { person: "zack", name: "Zack", sets: ["fri|Levity", "fri|Wooli"], at: null },
+  { person: "v", name: "Vrushi", sets: ["fri|Levity"], at: null },
+  { person: "s", name: "Sumit", sets: ["fri|Levity"], at: null },
+  { person: "n", name: "Nicolas", sets: ["fri|Wooli"], at: null }
 ];
 const vc = new VirtualConsole(); vc.sendTo(console, { omitJSDOMErrors: true });
 const dom = new JSDOM(html, {
   virtualConsole: vc, runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     w.fetch = (u, o) => o && o.method === "POST"
       ? Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) })
-      : Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "miamiii", people }) });
+      : Promise.resolve({ ok: true, json: () => Promise.resolve({ board: "edc", people }) });
     try {
       w.localStorage.clear();
-      w.localStorage.setItem("iiip26-pid", "zack");
-      w.localStorage.setItem("iiip26-welcomed", "1");
-      w.localStorage.setItem("iiip26-mine", JSON.stringify(["fri|Hamdi", "fri|Levity"]));
+      w.localStorage.setItem("edc26-pid", "zack");
+      w.localStorage.setItem("edc26-welcomed", "1");
+      w.localStorage.setItem("edc26-mine", JSON.stringify(["fri|Levity", "fri|Wooli"]));
     } catch (e) {}
   }
 });
@@ -43,21 +43,21 @@ const rowFor = n => [...d.querySelectorAll("#run [data-run]")].find(x => x.datas
   await wait(1400);
   console.log("=== the running order");
   ck("lists your picks", d.querySelectorAll("#run [data-run]").length, 2);
-  ck("rows are reachable by keyboard", rowFor("Hamdi").getAttribute("tabindex"), "0");
-  ck("and announced as controls", rowFor("Hamdi").getAttribute("role"), "button");
+  ck("rows are reachable by keyboard", rowFor("Levity").getAttribute("tabindex"), "0");
+  ck("and announced as controls", rowFor("Levity").getAttribute("role"), "button");
 
   console.log("\n=== who is joining you");
-  ck("two others on Hamdi", rowFor("Hamdi").querySelectorAll(".runmk").length, 2);
-  ck("one on Levity", rowFor("Levity").querySelectorAll(".runmk").length, 1);
-  ck("named in the tooltip", [...rowFor("Hamdi").querySelectorAll(".runmk")].map(i => i.getAttribute("title")).sort(), ["Sumit", "Vrushi"]);
-  ck("the bare count is gone", /with 2/.test(rowFor("Hamdi").textContent), false);
+  ck("two others on Levity", rowFor("Levity").querySelectorAll(".runmk").length, 2);
+  ck("one on Wooli", rowFor("Wooli").querySelectorAll(".runmk").length, 1);
+  ck("named in the tooltip", [...rowFor("Levity").querySelectorAll(".runmk")].map(i => i.getAttribute("title")).sort(), ["Sumit", "Vrushi"]);
+  ck("the bare count is gone", /with 2/.test(rowFor("Levity").textContent), false);
 
   console.log("\n=== tapping opens that set");
-  rowFor("Hamdi").click();
+  rowFor("Levity").click();
   await wait(120);
   const sheet = d.getElementById("sheet");
   ck("sheet opened", sheet.classList.contains("on"), true);
-  ck("on the right set", sheet.dataset.n, "Hamdi");
+  ck("on the right set", sheet.dataset.n, "Levity");
   ck("and lists them by name", /Vrushi/.test(sheet.textContent) && /Sumit/.test(sheet.textContent), true);
   ck("without the one who is not going", /Nicolas/.test(sheet.textContent), false);
   d.querySelector("#sheet button[data-close]").click();
@@ -65,20 +65,20 @@ const rowFor = n => [...d.querySelectorAll("#run [data-run]")].find(x => x.datas
 
   console.log("\n=== keyboard");
   const ev = new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true });
-  rowFor("Levity").dispatchEvent(ev);
+  rowFor("Wooli").dispatchEvent(ev);
   await wait(120);
-  ck("Enter opens it too", d.getElementById("sheet").dataset.n, "Levity");
+  ck("Enter opens it too", d.getElementById("sheet").dataset.n, "Wooli");
   ck("shows who is on that one", /Nicolas/.test(d.getElementById("sheet").textContent), true);
   d.querySelector("#sheet button[data-close]").click();
   await wait(80);
 
   console.log("\n=== a set nobody else picked");
-  w.eval("mine.add('fri|Floating Points');draw()");
+  w.eval("mine.add('fri|Azzeca');draw()");
   await wait(80);
-  const solo = rowFor("Floating Points");
+  const solo = rowFor("Azzeca");
   ck("still listed", !!solo, true);
   ck("no markers", solo.querySelectorAll(".runmk").length, 0);
-  ck("still tappable", (solo.click(), d.getElementById("sheet").dataset.n), "Floating Points");
+  ck("still tappable", (solo.click(), d.getElementById("sheet").dataset.n), "Azzeca");
 
   console.log(fail.length ? "\n" + fail.length + " FAILURES:\n" + fail.join("\n") : "\nall assertions passed");
   setTimeout(() => dom.window.close(), 100);

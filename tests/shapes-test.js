@@ -9,28 +9,28 @@ const { JSDOM } = require("jsdom");
 const html = fs.readFileSync(PAGE, "utf8");
 
 const BOARDS = {
-  miamiii: [
-    { person: "p-zack", name: "Zack", sets: ["fri|Hamdi", "sat|KETTAMA", "sat|VTSS"] },
-    { person: "p-winston", name: "Winston", sets: ["fri|Parcels", "sat|KETTAMA"] },
-    { person: "p-cara", name: "Cara", sets: ["fri|Hamdi"] }
+  edc: [
+    { person: "p-zack", name: "Zack", sets: ["fri|Levity", "sat|Kaskade", "sat|Franky Rizardo"] },
+    { person: "p-winston", name: "Winston", sets: ["fri|Afrojack", "sat|Kaskade"] },
+    { person: "p-cara", name: "Cara", sets: ["fri|Levity"] }
   ],
   boston: [
-    { person: "b-dana", name: "Dana", sets: ["fri|Hamdi", "sat|Underworld"] },
-    { person: "b-lee", name: "Lee", sets: ["sat|VTSS"] }
+    { person: "b-dana", name: "Dana", sets: ["fri|Levity", "sat|Alison Wonderland"] },
+    { person: "b-lee", name: "Lee", sets: ["sat|Franky Rizardo"] }
   ],
-  stpete: [{ person: "s-marco", name: "Marco", sets: ["sat|KETTAMA"] }]
+  stpete: [{ person: "s-marco", name: "Marco", sets: ["sat|Kaskade"] }]
 };
 
 const dom = new JSDOM(html, {
   runScripts: "dangerously",
-  url: "https://iii-points.zstraub65.workers.dev/#board=miamiii",
+  url: "https://iii-points.zstraub65.workers.dev/#board=edc",
   beforeParse(w) {
     w.fetch = (u, o) => {
       const b = decodeURIComponent(String(u).split("board=")[1] || "");
       if (o && o.method === "POST") return Promise.resolve({ ok: true, json: () => Promise.resolve({ ok: true }) });
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ board: b, people: BOARDS[b] || [] }) });
     };
-    try { w.localStorage.clear(); w.localStorage.setItem("iiip26-pid", "p-zack"); w.localStorage.setItem("iiip26-mine", JSON.stringify(["fri|Hamdi","sat|KETTAMA","sat|VTSS"])); } catch (e) {}
+    try { w.localStorage.clear(); w.localStorage.setItem("edc26-pid", "p-zack"); w.localStorage.setItem("edc26-mine", JSON.stringify(["fri|Levity","sat|Kaskade","sat|Franky Rizardo"])); } catch (e) {}
   }
 });
 
@@ -48,7 +48,7 @@ setTimeout(() => {
     const byCrew = {};
     rows.forEach(r => {
       const pid = r.dataset.pid;
-      const crew = pid.startsWith("p-") ? "miamiii" : pid.startsWith("b-") ? "boston" : "stpete";
+      const crew = pid.startsWith("p-") ? "edc" : pid.startsWith("b-") ? "boston" : "stpete";
       const shape = [...r.querySelector(".dot").classList].find(c => c.startsWith("mk-"));
       const colour = r.querySelector(".dot").style.background;
       (byCrew[crew] = byCrew[crew] || []).push({ pid, shape, colour });
@@ -61,7 +61,7 @@ setTimeout(() => {
     });
     const allShapes = Object.values(byCrew).map(m => m[0].shape);
     console.log("crews use different shapes:", new Set(allShapes).size === allShapes.length, allShapes);
-    console.log("your crew is the triangle:", byCrew.miamiii[0].shape === "mk-tri");
+    console.log("your crew is the triangle:", byCrew.edc[0].shape === "mk-tri");
 
     // grid markers carry shapes too
     const gm = d.querySelector(".blk .crew i");
@@ -73,7 +73,7 @@ setTimeout(() => {
     const sheet = d.getElementById("sheet");
     const txt = sheet.textContent;
     console.log("\nopened Dana:", /Dana/.test(txt), "| shows her crew:", /boston/.test(txt));
-    console.log("lists her sets:", /Hamdi/.test(txt) && /Underworld/.test(txt));
+    console.log("lists her sets:", /Levity/.test(txt) && /Alison Wonderland/.test(txt));
     console.log("flags the one you share:", /you too/.test(txt));
     console.log("counts shared sets:", /both down for 1 set/.test(txt));
 
@@ -81,12 +81,12 @@ setTimeout(() => {
     d.querySelector('#sheet button[data-close]').click();
     rows.find(r => r.dataset.pid === "b-lee").click();
     const leeTxt=d.getElementById("sheet").textContent;
-    console.log("Lee shares VTSS, so wording is:", /both down for 1 set/.test(leeTxt)?"shared count":/Nothing in common/.test(leeTxt)?"nothing in common":"?");
+    console.log("Lee shares Franky Rizardo, so wording is:", /both down for 1 set/.test(leeTxt)?"shared count":/Nothing in common/.test(leeTxt)?"nothing in common":"?");
     // and someone with genuinely no overlap
     d.querySelector("#sheet button[data-close]").click();
     rows.find(r=>r.dataset.pid==="p-winston").click();
     const wTxt=d.getElementById("sheet").textContent;
-    console.log("Winston (shares KETTAMA) wording:", /both down for 1 set/.test(wTxt));
+    console.log("Winston (shares Kaskade) wording:", /both down for 1 set/.test(wTxt));
 
     dom.window.close();
   }, 500);
